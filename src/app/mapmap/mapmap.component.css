@@ -1,7 +1,3 @@
-.map {
-  width: 100vw;
-  height: 100vh;
-}
 #marker {
   width: 20px;
   height: 20px;
@@ -9,7 +5,6 @@
   border-radius: 10px;
   background-color: #0FF;
   opacity: 0.5;
-  display: block;
 }
 #vienna {
   text-decoration: none;
@@ -17,14 +12,6 @@
   font-size: 11pt;
   font-weight: bold;
   text-shadow: black 0.1em 0.1em 0.2em;
-}
-#viennaInfo {
-  width: 150px;
-  height: 60px;
-  font-size: 0.8em;
-  border: 1px solid #000;
-  background-color: #FFF;
-  display: block;
 }
 .popover-content {
   min-width: 180px;
