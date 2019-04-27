@@ -43,6 +43,7 @@ export class NewmapComponent implements OnInit {
      * Elements that make up the popup.
      */
     var container = document.getElementById('popup');
+    var container2 = document.getElementById('popup2');
     var content = document.getElementById('popup-content');
     var closer = document.getElementById('popup-closer');
 
@@ -52,6 +53,13 @@ export class NewmapComponent implements OnInit {
      */
     var overlay = new Overlay({
       element: container,
+      autoPan: true,
+      autoPanAnimation: {
+        duration: 250
+      }
+    });
+    var overlay2 = new Overlay({
+      element: container2,
       autoPan: true,
       autoPanAnimation: {
         duration: 250
@@ -81,12 +89,13 @@ export class NewmapComponent implements OnInit {
       center: fromLonLat([this.longitude, this.latitude]),
       zoom: this.zoom
     });
-    this.map = new Map({
+    var map = new Map({
       target: 'map',
       layers: [this.layer],
       view: this.view
     });
 
+    var lecce = fromLonLat([18.115893, 40.339651]);
     var pos = fromLonLat([16.3725, 48.208889]);
     // Vienna marker
     var viennaInfo = new Overlay({
@@ -95,21 +104,37 @@ export class NewmapComponent implements OnInit {
       element: document.getElementById('viennaInfo'),
       stopEvent: false
     });
-    this.map.addOverlay(viennaInfo);
-    this.map.addOverlay(overlay);
+    map.addOverlay(viennaInfo);
+
+    function onMoveEnd(evt) {
+      var map = evt.map;
+      var zoom = map.getView().getZoom();
+      console.log(zoom);
+
+      if ( zoom == 8) {
+        map.addOverlay(overlay2);
+        overlay2.setPosition(lecce);
+      } else {
+        overlay2.setPosition(undefined);
+      }
+    }
+
+    map.on('moveend', onMoveEnd);
 
 
-    /**
+/*    /!**
      * Add a click handler to the map to render the popup.
-     */
-    this.map.on('singleclick', function(evt) {
+     *!/
+    map.on('moveend', function(evt) {
       var coordinate = evt.coordinate;
       var hdms = toStringHDMS(toLonLat(coordinate));
-
+      map.addOverlay(overlay);
+      map.addOverlay(overlay2);
       content.innerHTML = '<p>You clicked here:</p><code>' + hdms +
         '</code>';
       overlay.setPosition(coordinate);
-    });
+      overlay2.setPosition(pos);
+    });*/
 
   }
 
@@ -123,5 +148,6 @@ export class NewmapComponent implements OnInit {
     view.setCenter(fromLonLat([this.longitude, this.latitude]));
     view.setZoom(8);
   }
+
 
 }
