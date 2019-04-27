@@ -13,6 +13,13 @@
 
 }
 
+.sidenav-content  {
+  width: calc(100% - 200px);
+  margin-right: auto;
+  margin-left: auto;
+  box-sizing: border-box;
+}
+
 
 .mat-toolbar.mat-primary {
   position: sticky;
