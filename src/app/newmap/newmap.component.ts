@@ -1,5 +1,6 @@
 import {AfterViewInit, Component, OnChanges, OnInit} from '@angular/core';
 
+import Popup from 'ol-popup';
 import MousePosition from 'ol/control';
 import createStringXY from 'ol/coordinate'
 import OSM from 'ol/source'
@@ -106,16 +107,18 @@ export class NewmapComponent implements OnInit {
     });
     map.addOverlay(viennaInfo);
 
+    var popup = new Popup({insertFirst: false});
+    map.addOverlay(popup);
+
     function onMoveEnd(evt) {
       var map = evt.map;
       var zoom = map.getView().getZoom();
       console.log(zoom);
 
       if ( zoom == 8) {
-        map.addOverlay(overlay2);
-        overlay2.setPosition(lecce);
+        popup.show(lecce, '<div><h2>Coordinates</h2><p>' + lecce + '</p></div>');
       } else {
-        overlay2.setPosition(undefined);
+        popup.hide();
       }
     }
 
@@ -147,6 +150,10 @@ export class NewmapComponent implements OnInit {
     var view = this.map.getView();
     view.setCenter(fromLonLat([this.longitude, this.latitude]));
     view.setZoom(8);
+  }
+
+  setPopup(testo: string){
+
   }
 
 

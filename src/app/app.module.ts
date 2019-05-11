@@ -47,6 +47,8 @@ import {CdkTreeModule} from '@angular/cdk/tree';
 import { ProvaComponent } from './prova/prova.component';
 import { MapComponent } from './map/map.component';
 import { NewmapComponent } from './newmap/newmap.component';
+import { HeatmapComponent } from './heatmap/heatmap.component';
+import {FormsModule} from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -54,7 +56,8 @@ import { NewmapComponent } from './newmap/newmap.component';
     HomeComponent,
     ProvaComponent,
     MapComponent,
-    NewmapComponent
+    NewmapComponent,
+    HeatmapComponent
   ],
   imports: [
 
@@ -98,7 +101,8 @@ import { NewmapComponent } from './newmap/newmap.component';
 
     BrowserModule,
     LayoutModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
