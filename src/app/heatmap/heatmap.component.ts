@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import Map from 'ol/Map.js';
 import View from 'ol/View.js';
+import {GeoJSON} from 'ol/format';
 import KML from 'ol/format/KML.js';
 import {Heatmap as HeatmapLayer, Tile as TileLayer} from 'ol/layer.js';
 import Stamen from 'ol/source/Stamen.js';
@@ -30,10 +31,21 @@ export class HeatmapComponent implements OnInit {
       source: this.source
     });
 
-    var vector = new HeatmapLayer({
+/*    var vector = new HeatmapLayer({
       source: new VectorSource({
         url: 'assets/data/kml/2012_Earthquakes_Mag5.kml',
         format: new KML({
+          extractStyles: false
+        })
+      }),
+      blur: 5,
+      radius: 10
+    });*/
+
+    var vector = new HeatmapLayer({
+      source: new VectorSource({
+        url: 'assets/data/2012_Earthquakes_Mag5.geojson',
+        format: new GeoJSON({
           extractStyles: false
         })
       }),
