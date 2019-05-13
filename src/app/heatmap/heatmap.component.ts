@@ -18,10 +18,17 @@ export class HeatmapComponent implements OnInit {
   map: Map;
   source: XYZ;
   mapLayer: TileLayer;
+  maxPollution = 80;
+  vector: HeatmapLayer;
 
-  constructor() { }
+  constructor() {
+
+  }
 
   ngOnInit() {
+    var blur = document.getElementById('blur');
+    var radius = document.getElementById('radius');
+
 
     this.source = new XYZ({
       url: 'http://tile.osm.org/{z}/{x}/{y}.png'
@@ -42,24 +49,35 @@ export class HeatmapComponent implements OnInit {
       radius: 10
     });*/
 
-    var vector = new HeatmapLayer({
+    this.vector = new HeatmapLayer({
       source: new VectorSource({
-        url: 'assets/data/2012_Earthquakes_Mag5.geojson',
+        //url: 'assets/data/apollon500.geojson',
+        url: 'http://localhost:8090/test/getGeo',
+
         format: new GeoJSON({
           extractStyles: false
         })
       }),
       blur: 5,
-      radius: 10
+      radius: 15,
+      opacity: 0.3,
+      renderMode: 'image',
+      weight: (feature) => {
+        // get your feature property
+        var weightProperty = feature.get('weight');
+        // perform some calculation to get weightProperty between 0 - 1
+        weightProperty = weightProperty /this.maxPollution; // this was your suggestion - make sure this makes sense
+        return weightProperty;
+      }
     });
 
-    vector.getSource().on('addfeature', function(event) {
+    this.vector.getSource().on('addfeature', function(event) {
       // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
       // standards-violating <magnitude> tag in each Placemark.  We extract it from
       // the Placemark's name instead.
-      var name = event.feature.get('name');
-      var magnitude = parseFloat(name.substr(2));
-      event.feature.set('weight', magnitude - 5);
+      var name = event.feature.get('leq');
+      var magnitude = parseFloat(name);
+      event.feature.set('weight', magnitude);
     });
 
     var raster = new TileLayer({
@@ -68,14 +86,32 @@ export class HeatmapComponent implements OnInit {
       })
     });
 
-    var map = new Map({
-      layers: [this.mapLayer, vector],
+
+    this.map = new Map({
+      layers: [this.mapLayer],
       target: 'map',
       view: new View({
         center: [0, 0],
         zoom: 2
       })
     });
+
+    blur.addEventListener('input', ()=> {
+      // @ts-ignore
+      this.vector.setBlur(parseInt(blur.value, 10));
+    });
+
+    radius.addEventListener('input', () => {
+      // @ts-ignore
+      this.vector.setRadius(parseInt(radius.value, 10));
+    });
   }
 
+
+  remove() {
+    this.map.removeLayer(this.vector);
+  }
+  add() {
+    this.map.addLayer(this.vector);
+  }
 }

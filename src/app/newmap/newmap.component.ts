@@ -14,9 +14,9 @@ import TileLayer from 'ol/layer/Tile.js';
 import {toLonLat} from 'ol/proj.js';
 import XYZ from 'ol/source/XYZ';
 import { fromLonLat, transform } from 'ol/proj';
-import {Observable} from 'rxjs';
-import {computeStyle} from '@angular/animations/browser/src/util';
-
+import {Heatmap as HeatmapLayer} from 'ol/layer.js';
+import VectorSource from 'ol/source/Vector.js';
+import GeoJSON from 'ol/format/GeoJSON';
 @Component({
   selector: 'app-newmap',
   templateUrl: './newmap.component.html',
@@ -52,13 +52,28 @@ export class NewmapComponent implements OnInit {
     /**
      * Create an overlay to anchor the popup to the map.
      */
-    var overlay = new Overlay({
-      element: container,
-      autoPan: true,
-      autoPanAnimation: {
-        duration: 250
-      }
+
+    var vector = new HeatmapLayer({
+      source: new VectorSource({
+        url: '/home/antonio/apollon.geojson',
+        format: new GeoJSON({
+          extractStyles: false
+        })
+      }),
+      blur: 10,
+      radius: 1,
+      opacity: 0.1
     });
+
+    vector.getSource().on('addfeature', function(event) {
+      // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
+      // standards-violating <magnitude> tag in each Placemark.  We extract it from
+      // the Placemark's name instead.
+      var name = event.feature.get('name');
+      var magnitude = parseFloat(name.substr(2));
+      event.feature.set('weight', magnitude);
+    });
+
     var overlay2 = new Overlay({
       element: container2,
       autoPan: true,
@@ -92,7 +107,7 @@ export class NewmapComponent implements OnInit {
     });
     var map = new Map({
       target: 'map',
-      layers: [this.layer],
+      layers: [this.layer, vector],
       view: this.view
     });
 
@@ -114,6 +129,7 @@ export class NewmapComponent implements OnInit {
       var map = evt.map;
       var zoom = map.getView().getZoom();
       console.log(zoom);
+      console.log('ciao');
 
       if ( zoom == 8) {
         popup.show(lecce, '<div><h2>Coordinates</h2><p>' + lecce + '</p></div>');
@@ -125,19 +141,6 @@ export class NewmapComponent implements OnInit {
     map.on('moveend', onMoveEnd);
 
 
-/*    /!**
-     * Add a click handler to the map to render the popup.
-     *!/
-    map.on('moveend', function(evt) {
-      var coordinate = evt.coordinate;
-      var hdms = toStringHDMS(toLonLat(coordinate));
-      map.addOverlay(overlay);
-      map.addOverlay(overlay2);
-      content.innerHTML = '<p>You clicked here:</p><code>' + hdms +
-        '</code>';
-      overlay.setPosition(coordinate);
-      overlay2.setPosition(pos);
-    });*/
 
   }
 
