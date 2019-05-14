@@ -22,7 +22,7 @@
 }
 
 .sidenav {
-  width: 250px;
+  width: 270px;
 }
 
 .sidenav .mat-toolbar {
@@ -51,4 +51,30 @@
 .settings-label {
   display: inline-block;
   width: 80px;
+}
+
+
+
+.time-slider-content {
+  position: fixed;
+  display: flex;
+  bottom: 10px;
+  right: 10px;
+  z-index: 100;
+  background-color: rgba( 255,255,255,0.3);
+  border: 1px dashed #FFF;
+}
+
+.time-slider {
+  width: 300px;
+}
+
+.time-slider-label {
+  margin-top: -10px;
+  font-size: 12px;
+}
+
+.time-slider-label span {
+  display: inline-block;
+  width: 50%;
 }

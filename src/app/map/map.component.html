@@ -9,14 +9,14 @@
       <mat-expansion-panel  style="background:  none; box-shadow: none; padding: 0px; margin: 0px">
         <mat-expansion-panel-header>
           <mat-panel-title style="font-weight: unset">
-            Livelli Mappa:
+            <mat-icon>layers</mat-icon><span style="padding: 2px">Livelli mappa:</span>
           </mat-panel-title>
         </mat-expansion-panel-header>
         <mat-nav-list class="sidebar-link-group" style="margin-top: 0px; list-style-type: none;">
           <section class="example-section">
             <li>
               <mat-list-item>
-                <mat-checkbox color="primary" class="example-margin" [(ngModel)]="airPollutionLevel" (click)="addAirPollutionLayer()">Inquinamento dell'Aria</mat-checkbox>
+                <mat-checkbox color="primary" class="example-margin" [(ngModel)]="airPollutionLevel" (click)="addAirPollutionLayer()">Inquinamento atmosferico</mat-checkbox>
                 <button mat-icon-button (click)="showAirPollutionSettings()"><mat-icon>settings</mat-icon></button>
               </mat-list-item>
               <form class="settings-form" *ngIf="airPollutionSettings">
@@ -43,6 +43,19 @@
 
   </mat-sidenav>
   <mat-sidenav-content>
+    <div class="time-slider-content">
+      <div style="margin: auto">
+        <mat-icon color="primary" >timeline</mat-icon>
+      </div>
+      <div>
+        <mat-slider color="primary" id="timeSlider" min="2018" max="2020" step="1" value="1" tickInterval="1" thumbLabel class="time-slider"><label>asdad</label></mat-slider>
+        <div class="time-slider-label">
+          <span>2018</span><span>2019</span>
+        </div>
+      </div>
+    </div>
+
+
     <div id="map" class="map"></div>
   </mat-sidenav-content>
 </mat-sidenav-container>
