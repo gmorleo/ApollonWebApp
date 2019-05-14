@@ -101,12 +101,13 @@ export class MapComponent implements OnInit {
   }
 
   addAirPollutionLayer() {
+    console.log(this.airPollutionLevel);
     if (this.airPollutionLevel == false) {
       this.map.addLayer(this.airPollutionVector);
-      this.airPollutionLevel = true;
+      //this.airPollutionLevel = true;
     } else {
       this.map.removeLayer(this.airPollutionVector);
-      this.airPollutionLevel = false;
+      //this.airPollutionLevel = false;
     }
   }
 

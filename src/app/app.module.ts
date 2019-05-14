@@ -80,7 +80,7 @@ import { SidenavComponent } from './sidenav/sidenav.component';
     MatDividerModule,
     MatExpansionModule,
     MatGridListModule,
-    MatIconModule,
+    MatIconModule ,
     MatInputModule,
     MatListModule,
     MatMenuModule,

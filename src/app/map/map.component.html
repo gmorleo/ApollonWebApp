@@ -1,5 +1,5 @@
 <mat-toolbar class="nav-header">
-  <div style="margin: auto">Progetto Apollon</div>
+  <div style="margin: auto">Progetto Apollon</div><mat-icon color="primary" svgIcon="thumbs-up"></mat-icon>
 </mat-toolbar>
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav class="sidenav" #sidenav mode="side" [(opened)]="opened" (opened)="events.push('open!')"
@@ -13,7 +13,11 @@
           </mat-panel-title>
         </mat-expansion-panel-header>
         <mat-nav-list class="sidebar-link-group" style="margin-top: 0px; list-style-type: none;">
-          <li><a mat-list-item role="button" (click)="addAirPollutionLayer()">Inquinamento dell'Aria</a></li>
+          <section class="example-section">
+            <mat-list-item>
+              <mat-checkbox class="example-margin" [(ngModel)]="airPollutionLevel" (click)="addAirPollutionLayer()">Inquinamento dell'Aria</mat-checkbox><mat-icon color="primary" svgIcon="thumbs-up"></mat-icon>
+            </mat-list-item>
+          </section>
         </mat-nav-list>
       </mat-expansion-panel>
     </mat-accordion>
