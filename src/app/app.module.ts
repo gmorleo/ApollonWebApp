@@ -49,6 +49,8 @@ import { MapComponent } from './map/map.component';
 import { NewmapComponent } from './newmap/newmap.component';
 import { HeatmapComponent } from './heatmap/heatmap.component';
 import {FormsModule} from '@angular/forms';
+import {HttpClientModule} from '@angular/common/http';
+import { SidenavComponent } from './sidenav/sidenav.component';
 
 @NgModule({
   declarations: [
@@ -57,7 +59,8 @@ import {FormsModule} from '@angular/forms';
     ProvaComponent,
     MapComponent,
     NewmapComponent,
-    HeatmapComponent
+    HeatmapComponent,
+    SidenavComponent
   ],
   imports: [
 
@@ -102,7 +105,8 @@ import {FormsModule} from '@angular/forms';
     BrowserModule,
     LayoutModule,
     BrowserAnimationsModule,
-    FormsModule
+    FormsModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]

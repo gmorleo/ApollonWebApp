@@ -1,5 +1,45 @@
+.nav-header {
+  height: 50px;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  color: #000;
+  background-color: #FFFFFF;
+  text-align: center;
+}
+
 .map {
   height: 100%;
   width: 100%;
   position: fixed;
+}
+
+.sidenav-container {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+}
+
+.sidenav {
+  width: 200px;
+}
+
+.sidenav .mat-toolbar {
+  background: inherit;
+
+}
+
+.sidenav-content  {
+  width: calc(100% - 200px);
+  margin-right: auto;
+  margin-left: auto;
+  box-sizing: border-box;
+}
+
+
+.mat-toolbar.mat-primary {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }

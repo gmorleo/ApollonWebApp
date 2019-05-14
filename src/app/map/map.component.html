@@ -1,16 +1,27 @@
-<!--
-div>
-  <div>
-    <label for="latitude">Latitude:</label>
-    <input id="latitude" type="number" ngModel="latitude" placeholder="Latitude">
-  </div>
+<mat-toolbar class="nav-header">
+  <div style="margin: auto">Progetto Apollon</div>
+</mat-toolbar>
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav class="sidenav" #sidenav mode="side" [(opened)]="opened" (opened)="events.push('open!')"
+               (closed)="events.push('close!')">
 
-  <div>
-    <label for="longitude">Longitude:</label>
-    <input id="longitude" type="number" ngModel="longitude" placeholder="Longitude">
-  </div>
-  <button (click)="setCenter()">Go</button>
-</div>
--->
-<div id="map" class="map"></div>
-<div id="mouse-position"></div>
+    <mat-accordion>
+      <mat-expansion-panel  style="background:  none; box-shadow: none; padding: 0px; margin: 0px">
+        <mat-expansion-panel-header>
+          <mat-panel-title style="font-weight: unset">
+            Livelli Mappa:
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-nav-list class="sidebar-link-group" style="margin-top: 0px; list-style-type: none;">
+          <li><a mat-list-item role="button" (click)="addAirPollutionLayer()">Inquinamento dell'Aria</a></li>
+        </mat-nav-list>
+      </mat-expansion-panel>
+    </mat-accordion>
+
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <div id="map" class="map"></div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+

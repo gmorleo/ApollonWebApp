@@ -1,64 +1,113 @@
 import { Component, OnInit } from '@angular/core';
+import Map from 'ol/Map.js';
+import View from 'ol/View.js';
+import {GeoJSON} from 'ol/format';
+import KML from 'ol/format/KML.js';
+import {Heatmap as HeatmapLayer, Tile as TileLayer} from 'ol/layer.js';
+import Stamen from 'ol/source/Stamen.js';
+import VectorSource from 'ol/source/Vector.js';
+import XYZ from 'ol/source/XYZ';
+import {MongoRestService} from '../services/mongo-rest.service';
+import {Observable} from 'rxjs';
+import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
+import {map} from 'rxjs/operators';
+import { fromLonLat, transform } from 'ol/proj';
 
-declare var ol: any;
+const   geojsonFormat = new GeoJSON({
+  extractStyles: false,
+  featureProjection: 'EPSG:3857'
+});
+
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css']
 })
+
 export class MapComponent implements OnInit {
 
-  latitude = 18.115893;
-  longitude = 40.339651;
-  zoom = 10;
+  events: string[] = [];
+  opened: boolean;
 
-  map: any;
+  airPollutionLevel;
 
-  constructor() { }
+  map: Map;
+  source: XYZ;
+  mapLayer: TileLayer;
+  maxPollution = 80;
+  airPollutionVector: HeatmapLayer;
+
+  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
+    .pipe(
+      map(result => result.matches)
+    );
+
+  constructor(private breakpointObserver: BreakpointObserver, public mongoRestService: MongoRestService) {
+    this.opened = true;
+    this.airPollutionLevel = false;
+  }
 
   ngOnInit() {
-    var mousePositionControl = new ol.control.MousePosition({
-      coordinateFormat: ol.coordinate.createStringXY(4),
-      projection: 'EPSG:4326',
-      // comment the following two lines to have the mouse position
-      // be placed within the map.
-      className: 'custom-mouse-position',
-      target: document.getElementById('mouse-position'),
-      undefinedHTML: '&nbsp;'
+    this.initializeMap();
+    this.setAirPollutionHeatmap();
+  }
+
+  initializeMap() {
+    this.source = new XYZ({
+      url: 'http://tile.osm.org/{z}/{x}/{y}.png'
     });
 
-    this.map = new ol.Map({
+    this.mapLayer = new TileLayer({
+      source: this.source
+    });
+
+    this.map = new Map({
+      layers: [this.mapLayer],
       target: 'map',
-      controls: ol.control.defaults({
-        attributionOptions: {
-          collapsible: false
-        }
-      }).extend([mousePositionControl]),
-      layers: [
-        new ol.layer.Tile({
-          source: new ol.source.OSM()
-        })
-      ],
-      view: new ol.View({
-        center: ol.proj.fromLonLat([this.latitude, this.longitude]),
-        zoom: this.zoom
+      view: new View({
+        center: fromLonLat([18.174631, 40.354130]),
+        zoom: 6
       })
     });
+  }
 
-    this.map.on('click', function (args) {
-      console.log(args.coordinate);
-      var lonlat = ol.proj.transform(args.coordinate, 'EPSG:3857', 'EPSG:4326');
-      console.log(lonlat);
-
-      var lon = lonlat[0];
-      var lat = lonlat[1];
-      alert(`lat: ${lat} long: ${lon}`);
+  setAirPollutionHeatmap() {
+    this.mongoRestService.getGeoJSON().subscribe( geoJSON => {
+      this.airPollutionVector = new HeatmapLayer({
+        source: new VectorSource({
+          features: geojsonFormat.readFeatures(geoJSON),
+        }),
+        blur: 5,
+        radius: 15,
+        opacity: 0.3,
+        renderMode: 'image',
+        weight: (feature) => {
+          // get your feature property
+          var weightProperty = feature.get('leq');
+          // perform some calculation to get weightProperty between 0 - 1
+          weightProperty = weightProperty / this.maxPollution; // this was your suggestion - make sure this makes sense
+          return weightProperty;
+        }
+      });
+      this.airPollutionVector.getSource().on('addfeature', function(event) {
+        // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
+        // standards-violating <magnitude> tag in each Placemark.  We extract it from
+        // the Placemark's name instead.
+        var name = event.feature.get('leq');
+        var magnitude = parseFloat(name);
+        event.feature.set('weight', magnitude);
+      });
     });
   }
 
-  setCenter() {
-    var view = this.map.getView();
-    view.setCenter(ol.proj.fromLonLat([this.longitude, this.latitude]));
-    view.setZoom(8);
+  addAirPollutionLayer() {
+    if (this.airPollutionLevel == false) {
+      this.map.addLayer(this.airPollutionVector);
+      this.airPollutionLevel = true;
+    } else {
+      this.map.removeLayer(this.airPollutionVector);
+      this.airPollutionLevel = false;
+    }
   }
+
 }

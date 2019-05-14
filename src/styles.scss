@@ -3,3 +3,17 @@
 html, body {
   height: 100%;
 }
+.mat-expansion-panel.mat-expanded {
+  //background:rgba(0,0,0,.05) !important;
+}
+
+.mat-expansion-panel-body {
+  padding: 0px !important;
+  /*background:rgba(255,255,255,.50);*/
+}
+.mat-expansion-panel-header {
+  font-size: 17px;
+}
+.mat-expansion-panel-header.mat-expanded {
+  transition:.3s all linear;
+}

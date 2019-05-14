@@ -7,29 +7,37 @@ import {Heatmap as HeatmapLayer, Tile as TileLayer} from 'ol/layer.js';
 import Stamen from 'ol/source/Stamen.js';
 import VectorSource from 'ol/source/Vector.js';
 import XYZ from 'ol/source/XYZ';
+import {MongoRestService} from '../services/mongo-rest.service';
+
+const   geojsonFormat = new GeoJSON({
+  extractStyles: false,
+  featureProjection: 'EPSG:3857'
+});
 
 @Component({
   selector: 'app-heatmap',
   templateUrl: './heatmap.component.html',
   styleUrls: ['./heatmap.component.css']
 })
+
 export class HeatmapComponent implements OnInit {
 
   map: Map;
   source: XYZ;
   mapLayer: TileLayer;
   maxPollution = 80;
-  vector: HeatmapLayer;
+  airPollutionVector: HeatmapLayer;
 
-  constructor() {
+  constructor(public  mongoRestService: MongoRestService) {
 
   }
 
   ngOnInit() {
-    var blur = document.getElementById('blur');
-    var radius = document.getElementById('radius');
+    this.initializeMap();
+    this.setAirPollutionHeatmap();
+  }
 
-
+  initializeMap() {
     this.source = new XYZ({
       url: 'http://tile.osm.org/{z}/{x}/{y}.png'
     });
@@ -37,55 +45,6 @@ export class HeatmapComponent implements OnInit {
     this.mapLayer = new TileLayer({
       source: this.source
     });
-
-/*    var vector = new HeatmapLayer({
-      source: new VectorSource({
-        url: 'assets/data/kml/2012_Earthquakes_Mag5.kml',
-        format: new KML({
-          extractStyles: false
-        })
-      }),
-      blur: 5,
-      radius: 10
-    });*/
-
-    this.vector = new HeatmapLayer({
-      source: new VectorSource({
-        //url: 'assets/data/apollon500.geojson',
-        url: 'http://localhost:8090/test/getGeo',
-
-        format: new GeoJSON({
-          extractStyles: false
-        })
-      }),
-      blur: 5,
-      radius: 15,
-      opacity: 0.3,
-      renderMode: 'image',
-      weight: (feature) => {
-        // get your feature property
-        var weightProperty = feature.get('weight');
-        // perform some calculation to get weightProperty between 0 - 1
-        weightProperty = weightProperty /this.maxPollution; // this was your suggestion - make sure this makes sense
-        return weightProperty;
-      }
-    });
-
-    this.vector.getSource().on('addfeature', function(event) {
-      // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
-      // standards-violating <magnitude> tag in each Placemark.  We extract it from
-      // the Placemark's name instead.
-      var name = event.feature.get('leq');
-      var magnitude = parseFloat(name);
-      event.feature.set('weight', magnitude);
-    });
-
-    var raster = new TileLayer({
-      source: new Stamen({
-        layer: 'toner'
-      })
-    });
-
 
     this.map = new Map({
       layers: [this.mapLayer],
@@ -95,23 +54,43 @@ export class HeatmapComponent implements OnInit {
         zoom: 2
       })
     });
+  }
 
-    blur.addEventListener('input', ()=> {
-      // @ts-ignore
-      this.vector.setBlur(parseInt(blur.value, 10));
+  setAirPollutionHeatmap() {
+    this.mongoRestService.getGeoJSON().subscribe( geoJSON => {
+      this.airPollutionVector = new HeatmapLayer({
+        source: new VectorSource({
+          features: geojsonFormat.readFeatures(geoJSON),
+        }),
+        blur: 5,
+        radius: 15,
+        opacity: 0.3,
+        renderMode: 'image',
+        weight: (feature) => {
+          // get your feature property
+          var weightProperty = feature.get('leq');
+          // perform some calculation to get weightProperty between 0 - 1
+          weightProperty = weightProperty / this.maxPollution; // this was your suggestion - make sure this makes sense
+          return weightProperty;
+        }
+      });
+      this.airPollutionVector.getSource().on('addfeature', function(event) {
+        // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
+        // standards-violating <magnitude> tag in each Placemark.  We extract it from
+        // the Placemark's name instead.
+        var name = event.feature.get('leq');
+        var magnitude = parseFloat(name);
+        event.feature.set('weight', magnitude);
+      });
     });
+  }
 
-    radius.addEventListener('input', () => {
-      // @ts-ignore
-      this.vector.setRadius(parseInt(radius.value, 10));
-    });
+  removeAirPollutionLayer() {
+    this.map.removeLayer(this.airPollutionVector);
+  }
+  addAirPollutionLayer() {
+    this.map.addLayer(this.airPollutionVector);
   }
 
 
-  remove() {
-    this.map.removeLayer(this.vector);
-  }
-  add() {
-    this.map.addLayer(this.vector);
-  }
 }
