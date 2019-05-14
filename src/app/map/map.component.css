@@ -43,3 +43,12 @@
   top: 0;
   z-index: 1;
 }
+
+.settings-form{
+  padding-left: 15px;
+}
+
+.settings-label {
+  display: inline-block;
+  width: 80px;
+}

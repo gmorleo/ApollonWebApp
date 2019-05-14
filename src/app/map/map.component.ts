@@ -12,6 +12,7 @@ import {Observable} from 'rxjs';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import { fromLonLat, transform } from 'ol/proj';
+import {MatSliderChange} from '@angular/material';
 
 const   geojsonFormat = new GeoJSON({
   extractStyles: false,
@@ -30,6 +31,7 @@ export class MapComponent implements OnInit {
   opened: boolean;
 
   airPollutionLevel;
+  airPollutionSettings;
 
   map: Map;
   source: XYZ;
@@ -45,6 +47,7 @@ export class MapComponent implements OnInit {
   constructor(private breakpointObserver: BreakpointObserver, public mongoRestService: MongoRestService) {
     this.opened = true;
     this.airPollutionLevel = false;
+    this.airPollutionSettings = false;
   }
 
   ngOnInit() {
@@ -98,17 +101,28 @@ export class MapComponent implements OnInit {
         event.feature.set('weight', magnitude);
       });
     });
+
+
   }
 
   addAirPollutionLayer() {
     console.log(this.airPollutionLevel);
     if (this.airPollutionLevel == false) {
       this.map.addLayer(this.airPollutionVector);
-      //this.airPollutionLevel = true;
     } else {
       this.map.removeLayer(this.airPollutionVector);
-      //this.airPollutionLevel = false;
     }
   }
 
+  showAirPollutionSettings() {
+    this.airPollutionSettings = !this.airPollutionSettings;
+  }
+
+  setRadiusSize(event) {
+    this.airPollutionVector.setRadius(parseInt(event.value, 10))
+  }
+
+  setBlurSize(event) {
+    this.airPollutionVector.setRadius(parseInt(event.value, 10))
+  }
 }

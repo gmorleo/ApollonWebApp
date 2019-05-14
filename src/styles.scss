@@ -1,5 +1,6 @@
 @import './custom-theme';
 @import "~ol-popup/src/ol-popup.css";
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
 html, body {
   height: 100%;
 }
@@ -16,4 +17,18 @@ html, body {
 }
 .mat-expansion-panel-header.mat-expanded {
   transition:.3s all linear;
+}
+
+.material-icons {
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
 }
