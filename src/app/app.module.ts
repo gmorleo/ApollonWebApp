@@ -1,4 +1,4 @@
-import { BrowserModule } from '@angular/platform-browser';
+import {BrowserModule, HAMMER_GESTURE_CONFIG} from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
@@ -39,7 +39,7 @@ import {
   MatTabsModule,
   MatTooltipModule,
   MatTreeModule,
-  MatBottomSheetModule
+  MatBottomSheetModule, GestureConfig
 } from '@angular/material';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {CdkTableModule} from '@angular/cdk/table';
@@ -108,7 +108,9 @@ import { SidenavComponent } from './sidenav/sidenav.component';
     FormsModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [
+    { provide: HAMMER_GESTURE_CONFIG, useClass: GestureConfig },
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

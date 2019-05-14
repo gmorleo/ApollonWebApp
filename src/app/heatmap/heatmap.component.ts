@@ -82,7 +82,9 @@ export class HeatmapComponent implements OnInit {
         var magnitude = parseFloat(name);
         event.feature.set('weight', magnitude);
       });
+      this.map.addLayer(this.airPollutionVector);
     });
+
   }
 
   removeAirPollutionLayer() {
