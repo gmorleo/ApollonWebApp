@@ -1,4 +1,4 @@
-<mat-toolbar class="nav-header">
+<mat-toolbar color="primary" class="nav-header">
   <div style="margin: auto">Progetto Apollon</div>
 </mat-toolbar>
 <mat-sidenav-container class="sidenav-container">
@@ -16,18 +16,24 @@
           <section class="example-section">
             <li>
               <mat-list-item>
-                <mat-checkbox class="example-margin" [(ngModel)]="airPollutionLevel" (click)="addAirPollutionLayer()">Inquinamento dell'Aria</mat-checkbox><button mat-button (click)="showAirPollutionSettings()"><mat-icon>settings</mat-icon></button>
+                <mat-checkbox color="primary" class="example-margin" [(ngModel)]="airPollutionLevel" (click)="addAirPollutionLayer()">Inquinamento dell'Aria</mat-checkbox>
+                <button mat-icon-button (click)="showAirPollutionSettings()"><mat-icon>settings</mat-icon></button>
               </mat-list-item>
               <form class="settings-form" *ngIf="airPollutionSettings">
                 <div>
                   <span class="settings-label">radius size</span>
-                  <mat-slider id="radius" min="1" max="50" step="1" value="5" (change)="setRadiusSize($event)"></mat-slider>
+                  <mat-slider color="primary" id="radius" min="1" max="50" step="1" value="5" (change)="setRadiusSize($event)"></mat-slider>
                 </div>
                 <div>
                   <span class="settings-label">blur size</span>
-                  <mat-slider id="blur" type="range" min="1" max="50" step="1" value="15" (change)="setBlurSize($event)"></mat-slider>
+                  <mat-slider color="primary" id="blur" type="range" min="1" max="50" step="1" value="15" (change)="setBlurSize($event)"></mat-slider>
                 </div>
               </form>
+            </li>
+            <li>
+              <mat-list-item>
+                <mat-checkbox color="primary" class="example-margin">Inquinamento acustico</mat-checkbox>
+              </mat-list-item>
             </li>
             <mat-divider></mat-divider>
           </section>

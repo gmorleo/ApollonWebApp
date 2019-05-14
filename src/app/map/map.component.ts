@@ -2,9 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import Map from 'ol/Map.js';
 import View from 'ol/View.js';
 import {GeoJSON} from 'ol/format';
-import KML from 'ol/format/KML.js';
 import {Heatmap as HeatmapLayer, Tile as TileLayer} from 'ol/layer.js';
-import Stamen from 'ol/source/Stamen.js';
 import VectorSource from 'ol/source/Vector.js';
 import XYZ from 'ol/source/XYZ';
 import {MongoRestService} from '../services/mongo-rest.service';
@@ -12,7 +10,6 @@ import {Observable} from 'rxjs';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import { fromLonLat, transform } from 'ol/proj';
-import {MatSliderChange} from '@angular/material';
 
 const   geojsonFormat = new GeoJSON({
   extractStyles: false,
@@ -106,7 +103,6 @@ export class MapComponent implements OnInit {
   }
 
   addAirPollutionLayer() {
-    console.log(this.airPollutionLevel);
     if (this.airPollutionLevel == false) {
       this.map.addLayer(this.airPollutionVector);
     } else {
