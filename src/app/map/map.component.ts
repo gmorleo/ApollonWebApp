@@ -119,6 +119,11 @@ export class MapComponent implements OnInit {
   }
 
   setBlurSize(event) {
-    this.airPollutionVector.setRadius(parseInt(event.value, 10))
+    this.airPollutionVector.setBlur(parseInt(event.value, 10))
+  }
+
+  setOpacity(event) {
+    console.log(event.value);
+    this.airPollutionVector.setOpacity(event.value)
   }
 }
