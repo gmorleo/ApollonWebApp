@@ -1,6 +1,6 @@
 <mat-toolbar color="primary" class="nav-header">
   <div style="margin: auto">Progetto Apollon</div>
-</mat-toolbar>
+ </mat-toolbar>
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav class="sidenav" #sidenav mode="side" [(opened)]="opened" (opened)="events.push('open!')"
                (closed)="events.push('close!')">
@@ -22,11 +22,11 @@
               <form class="settings-form" *ngIf="airPollutionSettings">
                 <div>
                   <span class="settings-label">radius size</span>
-                  <mat-slider color="primary" id="radius" min="1" max="50" step="1" value="5" (change)="setRadiusSize($event)"></mat-slider>
+                  <mat-slider color="primary" id="radius" min="1" max="50" step="1" value="5" thumbLabel (change)="setRadiusSize($event)"></mat-slider>
                 </div>
                 <div>
                   <span class="settings-label">blur size</span>
-                  <mat-slider color="primary" id="blur" type="range" min="1" max="50" step="1" value="15" (change)="setBlurSize($event)"></mat-slider>
+                  <mat-slider color="primary" id="blur" type="range" min="1" max="50" step="1" thumbLabel value="15" (change)="setBlurSize($event)"></mat-slider>
                 </div>
               </form>
             </li>
@@ -44,13 +44,11 @@
   </mat-sidenav>
   <mat-sidenav-content>
     <div class="time-slider-content">
-      <div style="margin: auto">
-        <mat-icon color="primary" >timeline</mat-icon>
-      </div>
       <div>
-        <mat-slider color="primary" id="timeSlider" min="2018" max="2020" step="1" value="1" tickInterval="1" thumbLabel class="time-slider"><label>asdad</label></mat-slider>
+        <div class="time-slider-header"> Time travel</div>
+        <mat-slider color="primary" id="tim"  [min]="1" [max]="days.length" step="1" value="2" tickInterval="1" class="time-slider" [ngStyle]="{'width': (400-(400/this.days.length))+'px', 'margin-left': ((400/days.length)/3)+'px'}"></mat-slider>
         <div class="time-slider-label">
-          <span>2018</span><span>2019</span>
+          <div *ngFor="let s of days">{{s}}</div>
         </div>
       </div>
     </div>

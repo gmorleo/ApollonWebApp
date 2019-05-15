@@ -65,16 +65,25 @@
   border: 1px dashed #FFF;
 }
 
-.time-slider {
-  width: 300px;
+.time-slider-header {
+  text-align: center;
+  margin-top: 5px;
+  margin-bottom: -15px;
+  color: rgba(0,0,0,0.65);
 }
 
 .time-slider-label {
   margin-top: -10px;
   font-size: 12px;
+  display: flex;
+  width: 380px;
 }
 
-.time-slider-label span {
+.time-slider-label div {
   display: inline-block;
-  width: 50%;
+  margin: auto;
+}
+
+/deep/ .time-slider .mat-slider-track-fill{
+  background-color: rgba(0, 0, 0, 0.26) !important;
 }
