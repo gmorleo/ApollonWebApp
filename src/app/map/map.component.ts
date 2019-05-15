@@ -11,10 +11,12 @@ import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import { fromLonLat, transform } from 'ol/proj';
 
+//const   days = ["12/04","13/04","gio","ven"];
 const   geojsonFormat = new GeoJSON({
   extractStyles: false,
   featureProjection: 'EPSG:3857'
 });
+
 
 @Component({
   selector: 'app-map',
@@ -29,6 +31,8 @@ export class MapComponent implements OnInit {
 
   airPollutionLevel;
   airPollutionSettings;
+
+  days = ["12/04","13/04","14/04","15/04","16/04","17/04","18/04","19/04"];
 
   map: Map;
   source: XYZ;
@@ -98,8 +102,6 @@ export class MapComponent implements OnInit {
         event.feature.set('weight', magnitude);
       });
     });
-
-
   }
 
   addAirPollutionLayer() {
@@ -126,4 +128,5 @@ export class MapComponent implements OnInit {
     console.log(event.value);
     this.airPollutionVector.setOpacity(event.value)
   }
+
 }

@@ -22,7 +22,7 @@
 }
 
 .sidenav {
-  width: 250px;
+  width: 270px;
 }
 
 .sidenav .mat-toolbar {
@@ -51,4 +51,39 @@
 .settings-label {
   display: inline-block;
   width: 80px;
+}
+
+
+
+.time-slider-content {
+  position: fixed;
+  display: flex;
+  bottom: 10px;
+  right: 10px;
+  z-index: 100;
+  background-color: rgba( 255,255,255,0.3);
+  border: 1px dashed #FFF;
+}
+
+.time-slider-header {
+  text-align: center;
+  margin-top: 5px;
+  margin-bottom: -15px;
+  color: rgba(0,0,0,0.65);
+}
+
+.time-slider-label {
+  margin-top: -10px;
+  font-size: 12px;
+  display: flex;
+  width: 380px;
+}
+
+.time-slider-label div {
+  display: inline-block;
+  margin: auto;
+}
+
+/deep/ .time-slider .mat-slider-track-fill{
+  background-color: rgba(0, 0, 0, 0.26) !important;
 }

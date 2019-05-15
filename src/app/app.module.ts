@@ -2,7 +2,6 @@ import {BrowserModule, HAMMER_GESTURE_CONFIG} from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { HomeComponent } from './home/home.component';
 import { LayoutModule } from '@angular/cdk/layout';
 import {
   MatToolbarModule,
@@ -44,23 +43,14 @@ import {
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {CdkTableModule} from '@angular/cdk/table';
 import {CdkTreeModule} from '@angular/cdk/tree';
-import { ProvaComponent } from './prova/prova.component';
 import { MapComponent } from './map/map.component';
-import { NewmapComponent } from './newmap/newmap.component';
-import { HeatmapComponent } from './heatmap/heatmap.component';
 import {FormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
-import { SidenavComponent } from './sidenav/sidenav.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
-    ProvaComponent,
-    MapComponent,
-    NewmapComponent,
-    HeatmapComponent,
-    SidenavComponent
+    MapComponent
   ],
   imports: [
 

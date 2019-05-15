@@ -1,6 +1,6 @@
 <mat-toolbar color="primary" class="nav-header">
   <div style="margin: auto">Progetto Apollon</div>
-</mat-toolbar>
+ </mat-toolbar>
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav class="sidenav" #sidenav mode="side" [(opened)]="opened" (opened)="events.push('open!')"
                (closed)="events.push('close!')">
@@ -9,24 +9,24 @@
       <mat-expansion-panel  style="background:  none; box-shadow: none; padding: 0px; margin: 0px">
         <mat-expansion-panel-header>
           <mat-panel-title style="font-weight: unset">
-            Livelli Mappa:
+            <mat-icon>layers</mat-icon><span style="padding: 2px">Livelli mappa:</span>
           </mat-panel-title>
         </mat-expansion-panel-header>
         <mat-nav-list class="sidebar-link-group" style="margin-top: 0px; list-style-type: none;">
           <section class="example-section">
             <li>
               <mat-list-item>
-                <mat-checkbox color="primary" class="example-margin" [(ngModel)]="airPollutionLevel" (click)="addAirPollutionLayer()">Inquinamento dell'Aria</mat-checkbox>
+                <mat-checkbox color="primary" class="example-margin" [(ngModel)]="airPollutionLevel" (click)="addAirPollutionLayer()">Inquinamento atmosferico</mat-checkbox>
                 <button mat-icon-button (click)="showAirPollutionSettings()"><mat-icon>settings</mat-icon></button>
               </mat-list-item>
               <form class="settings-form" *ngIf="airPollutionSettings">
                 <div>
                   <span class="settings-label">radius size</span>
-                  <mat-slider color="primary" id="radius" min="1" max="50" step="1" value="5" (change)="setRadiusSize($event)"></mat-slider>
+                  <mat-slider color="primary" id="radius" min="1" max="50" step="1" value="5" thumbLabel (change)="setRadiusSize($event)"></mat-slider>
                 </div>
                 <div>
                   <span class="settings-label">blur size</span>
-                  <mat-slider color="primary" id="blur" type="range" min="1" max="50" step="1" value="15" (change)="setBlurSize($event)"></mat-slider>
+                  <mat-slider color="primary" id="blur" type="range" min="1" max="50" step="1" thumbLabel value="15" (change)="setBlurSize($event)"></mat-slider>
                 </div>
                 <div>
                   <span class="settings-label">Opacity</span>
@@ -47,6 +47,17 @@
 
   </mat-sidenav>
   <mat-sidenav-content>
+    <div class="time-slider-content">
+      <div>
+        <div class="time-slider-header"> Time travel</div>
+        <mat-slider color="primary" id="tim"  [min]="1" [max]="days.length" step="1" value="2" tickInterval="1" class="time-slider" [ngStyle]="{'width': (400-(400/this.days.length))+'px', 'margin-left': ((400/days.length)/3)+'px'}"></mat-slider>
+        <div class="time-slider-label">
+          <div *ngFor="let s of days">{{s}}</div>
+        </div>
+      </div>
+    </div>
+
+
     <div id="map" class="map"></div>
   </mat-sidenav-content>
 </mat-sidenav-container>
