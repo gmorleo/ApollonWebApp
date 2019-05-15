@@ -11,11 +11,15 @@ import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import { fromLonLat, transform } from 'ol/proj';
 
-//const   days = ["12/04","13/04","gio","ven"];
 const   geojsonFormat = new GeoJSON({
   extractStyles: false,
   featureProjection: 'EPSG:3857'
 });
+
+const lecce = fromLonLat([18.174631, 40.354130]);
+const minZoom = 3;
+const maxZoom = 17;
+const maxPollution = 80;
 
 
 @Component({
@@ -29,15 +33,15 @@ export class MapComponent implements OnInit {
   events: string[] = [];
   opened: boolean;
 
-  airPollutionLevel;
-  airPollutionSettings;
+  airPollutionLevel: boolean;
+  airPollutionSettings: boolean;
 
   days = ["12/04","13/04","14/04","15/04","16/04","17/04","18/04","19/04"];
+  date = [];
 
   map: Map;
   source: XYZ;
   mapLayer: TileLayer;
-  maxPollution = 80;
   airPollutionVector: HeatmapLayer;
 
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
@@ -69,8 +73,10 @@ export class MapComponent implements OnInit {
       layers: [this.mapLayer],
       target: 'map',
       view: new View({
-        center: fromLonLat([18.174631, 40.354130]),
-        zoom: 6
+        center: lecce,
+        zoom: 6,
+        minZoom: minZoom,
+        maxZoom: maxZoom
       })
     });
   }
@@ -89,7 +95,7 @@ export class MapComponent implements OnInit {
           // get your feature property
           var weightProperty = feature.get('leq');
           // perform some calculation to get weightProperty between 0 - 1
-          weightProperty = weightProperty / this.maxPollution; // this was your suggestion - make sure this makes sense
+          weightProperty = weightProperty / maxPollution; // this was your suggestion - make sure this makes sense
           return weightProperty;
         }
       });
@@ -112,21 +118,31 @@ export class MapComponent implements OnInit {
     }
   }
 
+  setTravelTimeDate() {
+    this.mongoRestService.getDate().subscribe( res => {
+      this.date = res;
+    })
+  }
+
   showAirPollutionSettings() {
     this.airPollutionSettings = !this.airPollutionSettings;
   }
 
   setRadiusSize(event) {
-    this.airPollutionVector.setRadius(parseInt(event.value, 10))
+    this.airPollutionVector.setRadius(event.value);
   }
 
   setBlurSize(event) {
-    this.airPollutionVector.setBlur(parseInt(event.value, 10))
+    this.airPollutionVector.setBlur(event.value);
   }
 
   setOpacity(event) {
-    console.log(event.value);
-    this.airPollutionVector.setOpacity(event.value)
+    this.airPollutionVector.setOpacity(event.value);
   }
 
+  changeDate() {
+    if (this.airPollutionLevel) {
+      this.setAirPollutionHeatmap();
+    }
+  }
 }

@@ -1,3 +1,10 @@
+.toolbar-title {
+  margin: auto;
+  color: #333;
+  font-family: roboto;
+  font-size: 27px;
+}
+
 .nav-header {
   height: 50px;
   top: 0;

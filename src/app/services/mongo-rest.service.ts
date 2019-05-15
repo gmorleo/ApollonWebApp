@@ -11,8 +11,12 @@ export class MongoRestService {
   constructor(public  http: HttpClient) { }
 
   getGeoJSON():Observable<GeoJSON> {
-    console.log(this.http.get("http://localhost:8090/test/getGeo"));
     let request = this.http.get<GeoJSON>("http://localhost:8090/test/getGeo");
     return request;
   }
+
+   getDate():Observable<String[]> {
+    let request = this.http.get<String[]>( "http://localhost:8090/test/getDate");
+    return request;
+   }
 }
