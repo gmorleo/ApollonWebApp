@@ -116,10 +116,10 @@ export class MapComponent implements OnInit {
     });
   }
 
-  setAirPollutionHeatmapRidotti(): Observable<boolean> {
+  setAirPollutionHeatmapRidotti(zoom, min_lon, min_lat, max_lon, max_lat): Observable<boolean> {
     return new Observable( observer => {
       if (this.airPollutionVectorRidotti == undefined) {
-        this.mongoRestService.getGeoJSONRidotti().subscribe(geoJSON => {
+        this.mongoRestService.getGeoJSONRidotti(zoom, min_lon, min_lat, max_lon, max_lat).subscribe(geoJSON => {
           this.airPollutionVectorRidotti = new HeatmapLayer({
             source: new VectorSource({
               features: geojsonFormat.readFeatures(geoJSON),
@@ -229,8 +229,11 @@ export class MapComponent implements OnInit {
   }
 
   addAirPollutionLayerRidotti() {
+    var zoom = this.map.getView().getZoom();
+    var glbox = this.map.getView().calculateExtent(this.map.getSize());
+    var  box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
     if (this.airPollutionLevelRidotti == false) {
-      this.setAirPollutionHeatmapRidotti().subscribe( res => {
+      this.setAirPollutionHeatmapRidotti(zoom, box[0],box[1],box[2],box[3]).subscribe( res => {
         this.map.addLayer(this.airPollutionVectorRidotti);
       });
     } else {
