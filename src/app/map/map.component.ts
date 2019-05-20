@@ -48,6 +48,7 @@ export class MapComponent implements OnInit {
   airPollutionVector: HeatmapLayer;
   airPollutionVectorRidotti: HeatmapLayer;
   obs;
+  zoom: any;
 
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
@@ -64,6 +65,8 @@ export class MapComponent implements OnInit {
   ngOnInit() {
     this.initializeMap();
     this.setAirPollutionHeatmap();
+    this.zoom = this.map.getView().getZoom();
+    console.log(this.zoom);
     //this.setAirPollutionHeatmapRidotti();
   }
 
@@ -81,10 +84,34 @@ export class MapComponent implements OnInit {
       target: 'map',
       view: new View({
         center: lecce,
-        zoom: 6,
+        zoom: 10,
         minZoom: minZoom,
         maxZoom: maxZoom
       })
+    });
+    /*this.map.events.register('moveend', this.map, (e) =>{
+      var zoomInfo = 'Zoom level=' + this.map.getZoom() + '/' + (this.map.numZoomLevels + 1);
+      console.log(zoomInfo);
+      document.getElementById('shortdesc').innerHTML = 'Show a Simple OSM Map --- ' + zoomInfo;
+    });*/
+
+    /*function onMoveEnd(evt) {
+      var map = evt.map;
+      var zoom = map.getView().getZoom();
+      console.log(zoom);
+
+    }*/
+
+    this.map.on('moveend', (evt) => {
+      var map = evt.map;
+      var zoom = map.getView().getZoom();
+      if (this.zoom != zoom){
+        this.zoom = zoom;
+        console.log(zoom);
+        this.map.removeLayer(this.airPollutionVectorRidotti);
+        this.addAirPollutionLayerRidotti();
+      }
+
     });
   }
 
@@ -119,41 +146,36 @@ export class MapComponent implements OnInit {
 
   setAirPollutionHeatmapRidotti(zoom,lon_min,lat_min,lon_max,lat_max): Observable<boolean> {
     return new Observable( observer => {
-      if (this.airPollutionVectorRidotti == undefined) {
-        this.mongoRestService.getGeoJSONRidotti(zoom,lon_min,lat_min,lon_max,lat_max).subscribe(geoJSON => {
-          this.airPollutionVectorRidotti = new HeatmapLayer({
-            source: new VectorSource({
-              features: geojsonFormat.readFeatures(geoJSON),
-            }),
-            blur: 20,
-            radius: 20,
-            opacity: 0.3,
-            renderMode: 'image',
-            weight: (feature) => {
-              // get your feature property
-              var weightProperty = feature.get('leq');
-              // perform some calculation to get weightProperty between 0 - 1
-              weightProperty = weightProperty / maxPollution; // this was your suggestion - make sure this makes sense
-              return weightProperty;
-            }
-          });
-
-/*          this.airPollutionVectorRidotti.getSource().on('addfeature', function (event) {
-            // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
-            // standards-violating <magnitude> tag in each Placemark.  We extract it from
-            // the Placemark's name instead.
-            //var name = event.feature.get('leq');
-            var magnitude = parseFloat(event.feature.get('leq'));
-            event.feature.set('weight', magnitude);
-          });*/
-          console.log("Finito heatmap");
-          observer.next(true);
-          observer.complete();
+      this.mongoRestService.getGeoJSONRidotti(zoom,lon_min,lat_min,lon_max,lat_max).subscribe(geoJSON => {
+        this.airPollutionVectorRidotti = new HeatmapLayer({
+          source: new VectorSource({
+            features: geojsonFormat.readFeatures(geoJSON),
+          }),
+          blur: 20,
+          radius: 20,
+          opacity: 0.3,
+          renderMode: 'image',
+          weight: (feature) => {
+            // get your feature property
+            var weightProperty = feature.get('leq');
+            // perform some calculation to get weightProperty between 0 - 1
+            weightProperty = weightProperty / maxPollution; // this was your suggestion - make sure this makes sense
+            return weightProperty;
+          }
         });
-      } else {
+
+        /*          this.airPollutionVectorRidotti.getSource().on('addfeature', function (event) {
+                    // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
+                    // standards-violating <magnitude> tag in each Placemark.  We extract it from
+                    // the Placemark's name instead.
+                    //var name = event.feature.get('leq');
+                    var magnitude = parseFloat(event.feature.get('leq'));
+                    event.feature.set('weight', magnitude);
+                  });*/
+        console.log("Finito heatmap");
         observer.next(true);
         observer.complete();
-      }
+      });
     })
   }
 
@@ -237,7 +259,7 @@ export class MapComponent implements OnInit {
     var glbox = this.map.getView().calculateExtent(this.map.getSize());
     var  box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
     if (this.airPollutionLevelRidotti == false) {
-      this.setAirPollutionHeatmapRidotti(zoom, box[0],box[1],box[2],box[3]).subscribe( res => {
+      this.setAirPollutionHeatmapRidotti(zoom, box[0]-1,box[1]-1,box[2]+1,box[3]+1).subscribe( res => {
         this.map.addLayer(this.airPollutionVectorRidotti);
       });
     } else {
@@ -249,4 +271,6 @@ export class MapComponent implements OnInit {
     this.opened = false;
     this.sidenavWidth = "50px";
   }
+
+
 }
