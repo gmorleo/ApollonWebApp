@@ -38,3 +38,12 @@ html, body {
   border: none !important;
   background-color: #8bc34a !important;
 }
+
+.mat.sidenav-content .mat-drawer-content {
+  margin-left: 0px !important;
+  flex: 1 1 auto;
+}
+
+.mat.sidenav {
+  flex: 0 1 auto;
+}

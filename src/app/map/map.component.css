@@ -19,7 +19,7 @@
 .map {
   height: 100%;
   width: 100%;
-  position: fixed;
+/*  position: fixed;*/
 }
 
 .sidenav-container {
@@ -38,9 +38,9 @@
 }
 
 .sidenav-content  {
-  width: calc(100% - 200px);
-  margin-right: auto;
-  margin-left: auto;
+/*  width: calc(100% - 200px);*/
+/*  margin-right: auto;
+  margin-left: 0px !important;*/
   box-sizing: border-box;
 }
 
@@ -94,3 +94,4 @@
 /deep/ .time-slider .mat-slider-track-fill{
   background-color: rgba(0, 0, 0, 0.26) !important;
 }
+

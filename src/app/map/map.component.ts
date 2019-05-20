@@ -116,16 +116,16 @@ export class MapComponent implements OnInit {
     });
   }
 
-  setAirPollutionHeatmapRidotti(zoom, min_lon, min_lat, max_lon, max_lat): Observable<boolean> {
+  setAirPollutionHeatmapRidotti(zoom, lat_min,lon_min,lat_max,lon_max): Observable<boolean> {
     return new Observable( observer => {
       if (this.airPollutionVectorRidotti == undefined) {
-        this.mongoRestService.getGeoJSONRidotti(zoom, min_lon, min_lat, max_lon, max_lat).subscribe(geoJSON => {
+        this.mongoRestService.getGeoJSONRidotti(zoom, lat_min,lon_min,lat_max,lon_max).subscribe(geoJSON => {
           this.airPollutionVectorRidotti = new HeatmapLayer({
             source: new VectorSource({
               features: geojsonFormat.readFeatures(geoJSON),
             }),
-            blur: 5,
-            radius: 15,
+            blur: 20,
+            radius: 20,
             opacity: 0.3,
             renderMode: 'image',
             weight: (feature) => {
@@ -136,14 +136,15 @@ export class MapComponent implements OnInit {
               return weightProperty;
             }
           });
-          this.airPollutionVectorRidotti.getSource().on('addfeature', function (event) {
+
+/*          this.airPollutionVectorRidotti.getSource().on('addfeature', function (event) {
             // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
             // standards-violating <magnitude> tag in each Placemark.  We extract it from
             // the Placemark's name instead.
-            var name = event.feature.get('leq');
-            var magnitude = parseFloat(name);
+            //var name = event.feature.get('leq');
+            var magnitude = parseFloat(event.feature.get('leq'));
             event.feature.set('weight', magnitude);
-          });
+          });*/
           console.log("Finito heatmap");
           observer.next(true);
           observer.complete();
@@ -202,9 +203,11 @@ export class MapComponent implements OnInit {
   }
 
   showAirPollutionSettings() {
+    //this.map.getView().setCenter(lecce);
     var zoom = this.map.getView().getZoom();
     var glbox = this.map.getView().calculateExtent(this.map.getSize());
     var  box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
+    console.log(glbox);
     console.log(box);
     console.log(zoom);
     this.airPollutionSettings = !this.airPollutionSettings;
@@ -233,7 +236,7 @@ export class MapComponent implements OnInit {
     var glbox = this.map.getView().calculateExtent(this.map.getSize());
     var  box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
     if (this.airPollutionLevelRidotti == false) {
-      this.setAirPollutionHeatmapRidotti(zoom, box[0],box[1],box[2],box[3]).subscribe( res => {
+      this.setAirPollutionHeatmapRidotti(zoom, box[1],box[0],box[3],box[2]).subscribe( res => {
         this.map.addLayer(this.airPollutionVectorRidotti);
       });
     } else {

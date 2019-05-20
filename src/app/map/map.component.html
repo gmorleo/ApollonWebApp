@@ -46,8 +46,8 @@
     </mat-accordion>
 
   </mat-sidenav>
-  <mat-sidenav-content>
-    <div class="time-slider-content">
+  <mat-sidenav-content class="sidenav-content">
+<!--    <div class="time-slider-content">
       <div>
         <div class="time-slider-header"> Time travel</div>
         <mat-slider color="primary" id="tim"  [min]="1" [max]="days.length" step="1" [value]="days.length" tickInterval="1" class="time-slider" (change)="changeDate()" [ngStyle]="{'width': (400-(400/this.days.length))+'px', 'margin-left': ((400/days.length)/3)+'px'}"></mat-slider>
@@ -55,10 +55,10 @@
           <div *ngFor="let s of days">{{s}}</div>
         </div>
       </div>
-    </div>
-
+    </div>-->
     <div id="map" class="map"></div>
+
+
   </mat-sidenav-content>
 </mat-sidenav-container>
-
 
