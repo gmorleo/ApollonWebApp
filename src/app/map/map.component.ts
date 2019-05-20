@@ -20,7 +20,7 @@ const   geojsonFormat = new GeoJSON({
 const lecce = fromLonLat([18.174631, 40.354130]);
 const minZoom = 3;
 const maxZoom = 17;
-const maxPollution = 80;
+const maxPollution =0.7;
 
 
 @Component({
@@ -105,7 +105,7 @@ export class MapComponent implements OnInit {
     this.map.on('moveend', (evt) => {
       var map = evt.map;
       var zoom = map.getView().getZoom();
-      if (this.zoom != zoom){
+      if (this.zoom != zoom && zoom <14){
         this.zoom = zoom;
         console.log(zoom);
         this.map.removeLayer(this.airPollutionVectorRidotti);
@@ -237,15 +237,15 @@ export class MapComponent implements OnInit {
   }
 
   setRadiusSize(event) {
-    this.airPollutionVector.setRadius(event.value);
+    this.airPollutionVectorRidotti.setRadius(event.value);
   }
 
   setBlurSize(event) {
-    this.airPollutionVector.setBlur(event.value);
+    this.airPollutionVectorRidotti.setBlur(event.value);
   }
 
   setOpacity(event) {
-    this.airPollutionVector.setOpacity(event.value);
+    this.airPollutionVectorRidotti.setOpacity(event.value);
   }
 
   changeDate() {
