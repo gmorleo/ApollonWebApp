@@ -38,7 +38,8 @@
 }
 
 .sidenav-content  {
-/*  width: calc(100% - 200px);*/
+  width: calc(100% - 270px);
+/*  width: 100%;*/
 /*  margin-right: auto;
   margin-left: 0px !important;*/
   box-sizing: border-box;
@@ -93,5 +94,14 @@
 
 /deep/ .time-slider .mat-slider-track-fill{
   background-color: rgba(0, 0, 0, 0.26) !important;
+}
+
+/deep/ mat-sidenav.md-sidenav-closed {
+  visibility: visible;
+  transform: translate3d(-80%, 0, 0);
+}
+
+/deep/ mat-sidenav.md-sidenav-closing {
+  transform: translate3d(-80%, 0, 0);
 }
 

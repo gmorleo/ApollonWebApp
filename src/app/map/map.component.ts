@@ -37,6 +37,7 @@ export class MapComponent implements OnInit {
   airPollutionLevel: boolean;
   airPollutionLevelRidotti: boolean;
   airPollutionSettings: boolean;
+  sidenavWidth = "270px;";
 
   days = ["12/04","13/04","14/04","15/04","16/04","17/04","18/04","19/04"];
   date = [];
@@ -116,10 +117,10 @@ export class MapComponent implements OnInit {
     });
   }
 
-  setAirPollutionHeatmapRidotti(zoom, lat_min,lon_min,lat_max,lon_max): Observable<boolean> {
+  setAirPollutionHeatmapRidotti(zoom,lon_min,lat_min,lon_max,lat_max): Observable<boolean> {
     return new Observable( observer => {
       if (this.airPollutionVectorRidotti == undefined) {
-        this.mongoRestService.getGeoJSONRidotti(zoom, lat_min,lon_min,lat_max,lon_max).subscribe(geoJSON => {
+        this.mongoRestService.getGeoJSONRidotti(zoom,lon_min,lat_min,lon_max,lat_max).subscribe(geoJSON => {
           this.airPollutionVectorRidotti = new HeatmapLayer({
             source: new VectorSource({
               features: geojsonFormat.readFeatures(geoJSON),
@@ -236,11 +237,16 @@ export class MapComponent implements OnInit {
     var glbox = this.map.getView().calculateExtent(this.map.getSize());
     var  box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
     if (this.airPollutionLevelRidotti == false) {
-      this.setAirPollutionHeatmapRidotti(zoom, box[1],box[0],box[3],box[2]).subscribe( res => {
+      this.setAirPollutionHeatmapRidotti(zoom, box[0],box[1],box[2],box[3]).subscribe( res => {
         this.map.addLayer(this.airPollutionVectorRidotti);
       });
     } else {
       this.map.removeLayer(this.airPollutionVectorRidotti);
     }
+  }
+
+  toggle() {
+    this.opened = false;
+    this.sidenavWidth = "50px";
   }
 }

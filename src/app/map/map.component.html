@@ -4,7 +4,8 @@
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav class="sidenav" #sidenav mode="side" [(opened)]="opened" (opened)="events.push('open!')"
                (closed)="events.push('close!')">
-
+<!--    <button mat-button style="margin: 10px" (click)="sidenav.toggle()"><mat-icon style="background-color: mediumseagreen;">menu</mat-icon><span>Menù</span></button>-->
+    <mat-divider></mat-divider>
     <mat-accordion>
       <mat-expansion-panel  style="background:  none; box-shadow: none; padding: 0px; margin: 0px">
         <mat-expansion-panel-header>
