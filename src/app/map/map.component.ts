@@ -99,11 +99,30 @@ export class MapComponent implements OnInit {
       this.showSpinner = true;
       this.map.removeLayer(this.airPollutionVectorRidotti);
       this.setAirHeatmapVector(zoom,box).subscribe( res => {
+
+        this.setProperty();
         this.map.addLayer(this.airPollutionVectorRidotti);
         this.showSpinner = false;
       });
       this.zoom = zoom;
       this.box = box;
+    }
+    this.setProperty();
+
+  }
+  setProperty(){
+    if (this.map.getView().getZoom() > 10) {
+      if (this.map.getView().getZoom() >= 12) {
+        this.airPollutionVectorRidotti.setRadius(42);
+        this.airPollutionVectorRidotti.setBlur(38);
+      } else {
+        this.airPollutionVectorRidotti.setRadius(38);
+        this.airPollutionVectorRidotti.setBlur(38);
+      }
+
+    } else {
+      this.airPollutionVectorRidotti.setRadius(19);
+      this.airPollutionVectorRidotti.setBlur(19);
     }
   }
 
@@ -114,8 +133,8 @@ export class MapComponent implements OnInit {
           source: new VectorSource({
             features: geojsonFormat.readFeatures(geoJSON),
           }),
-          blur: 20,
-          radius: 20,
+          blur: 19,
+          radius: 19,
           opacity: 0.3,
           renderMode: 'image',
           weight: (feature) => {
@@ -136,8 +155,8 @@ export class MapComponent implements OnInit {
         source: new VectorSource({
           features: geojsonFormat.readFeatures(geoJSON),
         }),
-        blur: 5,
-        radius: 15,
+        blur: 19,
+        radius: 19,
         opacity: 0.3,
         renderMode: 'image',
         weight: (feature) => {
