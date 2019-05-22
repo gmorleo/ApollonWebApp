@@ -38,7 +38,7 @@ export class MapComponent implements OnInit {
   showSpinner: boolean = false;
 
   airPollutionLevel: boolean = false;
-  airPollutionLevelRidotti: boolean = false;
+  leqLevel: boolean = false;
   airPollutionSettings: boolean = false;
 
   days = ["12/05","13/05","14/05","15/05","16/05","17/05","18/05","19/05"];
@@ -47,9 +47,9 @@ export class MapComponent implements OnInit {
   map: Map;
 
   airPollutionVector: HeatmapLayer;
-  airPollutionVectorRidotti: HeatmapLayer;
+  leqVectorLevel: HeatmapLayer;
 
-  zoom: any;
+  zoom = 0;
   box: any;
 
 /*  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
@@ -80,37 +80,49 @@ export class MapComponent implements OnInit {
       })
     });
 
-    this.zoom = this.map.getView().getZoom();
-    this.box = this.getViewSize();
-
     this.map.on('moveend', (evt) => {
       var map = evt.map;
-      var zoom = map.getView().getZoom();
-      if (this.airPollutionLevelRidotti) {
-        this.addAirPolutionheatmap();
+      var zoom = this.map.getView().getZoom();
+      var box = this.getViewSize();
+      if (this.leqLevel) {
+        this.addLeqLevel();
       }
     });
   }
 
-  addAirPolutionheatmap() {
+  showLeqLevel() {
+    if (this.leqLevel == false) {
+      this.addLeqLevel();
+    } else {
+      this.map.removeLayer(this.leqVectorLevel);
+      this.zoom = 0;
+    }
+  }
+
+  addLeqLevel() {
     var zoom = this.map.getView().getZoom();
     var box = this.getViewSize();
-    if ((Math.abs(this.zoom-zoom) > 1 || ((this.box[0]-1)-box[0] > 0) || ((this.box[1]-1)-box[1] > 0) || ((this.box[2]+1)-box[2] < 0) || ((this.box[3]+1)-box[3] < 0)) && (zoom < 14)) {
+    if ((zoom!=this.zoom ||
+        ((this.box[0]-1)-box[0] > 0) ||
+        ((this.box[1]-1)-box[1] > 0) ||
+        ((this.box[2]+1)-box[2] < 0) ||
+        ((this.box[3]+1)-box[3] < 0)) &&
+        (zoom < 14)) {
       this.showSpinner = true;
-      this.map.removeLayer(this.airPollutionVectorRidotti);
-      this.setAirHeatmapVector(zoom,box).subscribe( res => {
-        this.map.addLayer(this.airPollutionVectorRidotti);
+      this.map.removeLayer(this.leqVectorLevel);
+      this.setLeqVectorLevel(zoom,box).subscribe( res => {
+        this.map.addLayer(this.leqVectorLevel);
         this.showSpinner = false;
-      });
+      }, error1 => {console.log("errore")});
       this.zoom = zoom;
       this.box = box;
     }
   }
 
-  setAirHeatmapVector(zoom,box) {
+  setLeqVectorLevel(zoom,box) {
     return new Observable( observer => {
       this.mongoRestService.getGeoJSONRidotti(zoom,box[0]-1,box[1]-1,box[2]+1,box[3]+1).subscribe(geoJSON => {
-        this.airPollutionVectorRidotti = new HeatmapLayer({
+        this.leqVectorLevel = new HeatmapLayer({
           source: new VectorSource({
             features: geojsonFormat.readFeatures(geoJSON),
           }),
@@ -178,15 +190,15 @@ export class MapComponent implements OnInit {
   }
 
   setRadiusSize(event) {
-    this.airPollutionVectorRidotti.setRadius(event.value);
+    this.leqVectorLevel.setRadius(event.value);
   }
 
   setBlurSize(event) {
-    this.airPollutionVectorRidotti.setBlur(event.value);
+    this.leqVectorLevel.setBlur(event.value);
   }
 
   setOpacity(event) {
-    this.airPollutionVectorRidotti.setOpacity(event.value);
+    this.leqVectorLevel.setOpacity(event.value);
   }
 
   changeDate() {
@@ -195,20 +207,6 @@ export class MapComponent implements OnInit {
     }
   }
 
-  addAirPollutionLayerRidotti() {
-    var zoom = this.map.getView().getZoom();
-    var box = this.getViewSize();
-    if (this.airPollutionLevelRidotti == false) {
-      this.showSpinner = true;
-      this.setAirHeatmapVector(zoom,box).subscribe( res => {
-        this.map.addLayer(this.airPollutionVectorRidotti);
-        this.showSpinner = false;
-      });
-    } else {
-      this.map.removeLayer(this.airPollutionVectorRidotti);
-
-    }
-  }
 
   getViewSize():any {
     var glbox = this.map.getView().calculateExtent(this.map.getSize());

@@ -47,3 +47,8 @@ html, body {
 .mat.sidenav {
   flex: 0 1 auto;
 }
+
+.mat-checkbox-layout .mat-checkbox-label {
+  height: 40px;
+  line-height: 40px;
+}
