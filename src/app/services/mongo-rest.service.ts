@@ -17,7 +17,7 @@ export class MongoRestService {
   }
 
   getGeoJSONRidotti(zoom, lon_min,lat_min,lon_max,lat_max):Observable<GeoJSON> {
-    let request = this.http.get<GeoJSON>("http://localhost:8080/test/getJongo/"+lon_min+"/"+lat_min+"/"+lon_max+"/"+lat_max+"/");
+    let request = this.http.get<GeoJSON>("http://localhost:8080/test/getJongo/"+lon_min+"/"+lat_min+"/"+lon_max+"/"+lat_max+"/"+zoom+"/");
     console.log(request);
     return request;
   }

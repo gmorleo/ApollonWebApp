@@ -4,7 +4,6 @@
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav class="sidenav" #sidenav mode="side" [(opened)]="opened" (opened)="events.push('open!')"
                (closed)="events.push('close!')">
-<!--    <button mat-button style="margin: 10px" (click)="sidenav.toggle()"><mat-icon style="background-color: mediumseagreen;">menu</mat-icon><span>Menù</span></button>-->
     <mat-divider></mat-divider>
     <mat-accordion>
       <mat-expansion-panel  style="background:  none; box-shadow: none; padding: 0px; margin: 0px">
@@ -48,7 +47,8 @@
 
   </mat-sidenav>
   <mat-sidenav-content class="sidenav-content">
-<!--    <div class="time-slider-content">
+    <app-spinner [show]="showSpinner"> </app-spinner>
+    <div class="time-slider-content">
       <div>
         <div class="time-slider-header"> Time travel</div>
         <mat-slider color="primary" id="tim"  [min]="1" [max]="days.length" step="1" [value]="days.length" tickInterval="1" class="time-slider" (change)="changeDate()" [ngStyle]="{'width': (400-(400/this.days.length))+'px', 'margin-left': ((400/days.length)/3)+'px'}"></mat-slider>
@@ -56,7 +56,7 @@
           <div *ngFor="let s of days">{{s}}</div>
         </div>
       </div>
-    </div>-->
+    </div>
     <div id="map" class="map"></div>
 
 

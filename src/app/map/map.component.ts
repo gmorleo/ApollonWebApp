@@ -11,6 +11,7 @@ import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {map} from 'rxjs/operators';
 import { fromLonLat, transform , transformExtent} from 'ol/proj';
 import {toObservable} from '@angular/forms/src/validators';
+import {Box} from '../models/box';
 
 const   geojsonFormat = new GeoJSON({
   extractStyles: false,
@@ -18,6 +19,7 @@ const   geojsonFormat = new GeoJSON({
 });
 
 const lecce = fromLonLat([18.174631, 40.354130]);
+const default_zoom = 10;
 const minZoom = 3;
 const maxZoom = 17;
 const maxPollution = 80;
@@ -32,87 +34,100 @@ const maxPollution = 80;
 export class MapComponent implements OnInit {
 
   events: string[] = [];
-  opened: boolean;
+  opened: boolean = true;
+  showSpinner: boolean = false;
 
-  airPollutionLevel: boolean;
-  airPollutionLevelRidotti: boolean;
-  airPollutionSettings: boolean;
-  sidenavWidth = "270px;";
+  airPollutionLevel: boolean = false;
+  airPollutionLevelRidotti: boolean = false;
+  airPollutionSettings: boolean = false;
 
-  days = ["12/04","13/04","14/04","15/04","16/04","17/04","18/04","19/04"];
+  days = ["12/05","13/05","14/05","15/05","16/05","17/05","18/05","19/05"];
   date = [];
 
   map: Map;
-  source: XYZ;
-  mapLayer: TileLayer;
+
   airPollutionVector: HeatmapLayer;
   airPollutionVectorRidotti: HeatmapLayer;
-  obs;
-  zoom: any;
 
-  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
+  zoom: any;
+  box: any;
+
+/*  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
       map(result => result.matches)
-    );
+    );*/
 
   constructor(private breakpointObserver: BreakpointObserver, public mongoRestService: MongoRestService) {
-    this.opened = true;
-    this.airPollutionLevel = false;
-    this.airPollutionLevelRidotti = false;
-    this.airPollutionSettings = false;
   }
 
   ngOnInit() {
     this.initializeMap();
-    this.setAirPollutionHeatmap();
-    this.zoom = this.map.getView().getZoom();
-    console.log(this.zoom);
-    //this.setAirPollutionHeatmapRidotti();
   }
 
   initializeMap() {
-    this.source = new XYZ({
-      url: 'http://tile.osm.org/{z}/{x}/{y}.png'
-    });
-
-    this.mapLayer = new TileLayer({
-      source: this.source
-    });
-
     this.map = new Map({
-      layers: [this.mapLayer],
+      layers: [
+        new TileLayer({
+          source: new XYZ({url: 'http://tile.osm.org/{z}/{x}/{y}.png'})
+        })
+      ],
       target: 'map',
       view: new View({
         center: lecce,
-        zoom: 10,
+        zoom: default_zoom,
         minZoom: minZoom,
         maxZoom: maxZoom
       })
     });
-    /*this.map.events.register('moveend', this.map, (e) =>{
-      var zoomInfo = 'Zoom level=' + this.map.getZoom() + '/' + (this.map.numZoomLevels + 1);
-      console.log(zoomInfo);
-      document.getElementById('shortdesc').innerHTML = 'Show a Simple OSM Map --- ' + zoomInfo;
-    });*/
 
-    /*function onMoveEnd(evt) {
-      var map = evt.map;
-      var zoom = map.getView().getZoom();
-      console.log(zoom);
-
-    }*/
+    this.zoom = this.map.getView().getZoom();
+    this.box = this.getViewSize();
 
     this.map.on('moveend', (evt) => {
       var map = evt.map;
       var zoom = map.getView().getZoom();
-      if (this.zoom != zoom){
-        this.zoom = zoom;
-        console.log(zoom);
-        this.map.removeLayer(this.airPollutionVectorRidotti);
-        this.addAirPollutionLayerRidotti();
+      if (this.airPollutionLevelRidotti) {
+        this.addAirPolutionheatmap();
       }
-
     });
+  }
+
+  addAirPolutionheatmap() {
+    var zoom = this.map.getView().getZoom();
+    var box = this.getViewSize();
+    if ((Math.abs(this.zoom-zoom) > 1 || ((this.box[0]-1)-box[0] > 0) || ((this.box[1]-1)-box[1] > 0) || ((this.box[2]+1)-box[2] < 0) || ((this.box[3]+1)-box[3] < 0)) && (zoom < 14)) {
+      this.showSpinner = true;
+      this.map.removeLayer(this.airPollutionVectorRidotti);
+      this.setAirHeatmapVector(zoom,box).subscribe( res => {
+        this.map.addLayer(this.airPollutionVectorRidotti);
+        this.showSpinner = false;
+      });
+      this.zoom = zoom;
+      this.box = box;
+    }
+  }
+
+  setAirHeatmapVector(zoom,box) {
+    return new Observable( observer => {
+      this.mongoRestService.getGeoJSONRidotti(zoom,box[0]-1,box[1]-1,box[2]+1,box[3]+1).subscribe(geoJSON => {
+        this.airPollutionVectorRidotti = new HeatmapLayer({
+          source: new VectorSource({
+            features: geojsonFormat.readFeatures(geoJSON),
+          }),
+          blur: 20,
+          radius: 20,
+          opacity: 0.3,
+          renderMode: 'image',
+          weight: (feature) => {
+            var weightProperty = feature.get('leq');
+            weightProperty = weightProperty / maxPollution; // perform some calculation to get weightProperty between 0 - 1
+            return weightProperty;
+          }
+        });
+        observer.next(true);
+        observer.complete();
+      });
+    })
   }
 
   setAirPollutionHeatmap() {
@@ -144,73 +159,6 @@ export class MapComponent implements OnInit {
     });
   }
 
-  setAirPollutionHeatmapRidotti(zoom,lon_min,lat_min,lon_max,lat_max): Observable<boolean> {
-    return new Observable( observer => {
-      this.mongoRestService.getGeoJSONRidotti(zoom,lon_min,lat_min,lon_max,lat_max).subscribe(geoJSON => {
-        this.airPollutionVectorRidotti = new HeatmapLayer({
-          source: new VectorSource({
-            features: geojsonFormat.readFeatures(geoJSON),
-          }),
-          blur: 20,
-          radius: 20,
-          opacity: 0.3,
-          renderMode: 'image',
-          weight: (feature) => {
-            // get your feature property
-            var weightProperty = feature.get('leq');
-            // perform some calculation to get weightProperty between 0 - 1
-            weightProperty = weightProperty / maxPollution; // this was your suggestion - make sure this makes sense
-            return weightProperty;
-          }
-        });
-
-        /*          this.airPollutionVectorRidotti.getSource().on('addfeature', function (event) {
-                    // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
-                    // standards-violating <magnitude> tag in each Placemark.  We extract it from
-                    // the Placemark's name instead.
-                    //var name = event.feature.get('leq');
-                    var magnitude = parseFloat(event.feature.get('leq'));
-                    event.feature.set('weight', magnitude);
-                  });*/
-        console.log("Finito heatmap");
-        observer.next(true);
-        observer.complete();
-      });
-    })
-  }
-
-/*  setAirPollutionHeatmapRidotti(): Promise<boolean> {
-    this.mongoRestService.getGeoJSONRidotti().subscribe( geoJSON => {
-      this.airPollutionVectorRidotti = new HeatmapLayer({
-        source: new VectorSource({
-          features: geojsonFormat.readFeatures(geoJSON),
-        }),
-        blur: 5,
-        radius: 15,
-        opacity: 0.3,
-        renderMode: 'image',
-        weight: (feature) => {
-          // get your feature property
-          var weightProperty = feature.get('leq');
-          // perform some calculation to get weightProperty between 0 - 1
-          weightProperty = weightProperty / maxPollution; // this was your suggestion - make sure this makes sense
-          return weightProperty;
-        }
-      });
-      this.airPollutionVectorRidotti.getSource().on('addfeature', function(event) {
-        // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
-        // standards-violating <magnitude> tag in each Placemark.  We extract it from
-        // the Placemark's name instead.
-        var name = event.feature.get('leq');
-        var magnitude = parseFloat(name);
-        event.feature.set('weight', magnitude);
-      });
-      console.log("Finito heatmap");
-      return true;
-    });
-    return false;
-  }*/
-
   addAirPollutionLayer() {
     if (this.airPollutionLevel == false) {
       this.map.addLayer(this.airPollutionVector);
@@ -226,13 +174,6 @@ export class MapComponent implements OnInit {
   }
 
   showAirPollutionSettings() {
-    //this.map.getView().setCenter(lecce);
-    var zoom = this.map.getView().getZoom();
-    var glbox = this.map.getView().calculateExtent(this.map.getSize());
-    var  box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
-    console.log(glbox);
-    console.log(box);
-    console.log(zoom);
     this.airPollutionSettings = !this.airPollutionSettings;
   }
 
@@ -256,21 +197,22 @@ export class MapComponent implements OnInit {
 
   addAirPollutionLayerRidotti() {
     var zoom = this.map.getView().getZoom();
-    var glbox = this.map.getView().calculateExtent(this.map.getSize());
-    var  box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
+    var box = this.getViewSize();
     if (this.airPollutionLevelRidotti == false) {
-      this.setAirPollutionHeatmapRidotti(zoom, box[0]-1,box[1]-1,box[2]+1,box[3]+1).subscribe( res => {
+      this.showSpinner = true;
+      this.setAirHeatmapVector(zoom,box).subscribe( res => {
         this.map.addLayer(this.airPollutionVectorRidotti);
+        this.showSpinner = false;
       });
     } else {
       this.map.removeLayer(this.airPollutionVectorRidotti);
+
     }
   }
 
-  toggle() {
-    this.opened = false;
-    this.sidenavWidth = "50px";
+  getViewSize():any {
+    var glbox = this.map.getView().calculateExtent(this.map.getSize());
+    var box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
+    return box;
   }
-
-
 }
