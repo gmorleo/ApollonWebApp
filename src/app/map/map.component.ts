@@ -111,12 +111,14 @@ export class MapComponent implements OnInit {
       this.showSpinner = true;
       this.map.removeLayer(this.leqVectorLevel);
       this.setLeqVectorLevel(zoom,box).subscribe( res => {
+        this.setProperty();
         this.map.addLayer(this.leqVectorLevel);
         this.showSpinner = false;
       }, error1 => {console.log("errore")});
       this.zoom = zoom;
       this.box = box;
     }
+
   }
 
   setLeqVectorLevel(zoom,box) {
@@ -126,8 +128,8 @@ export class MapComponent implements OnInit {
           source: new VectorSource({
             features: geojsonFormat.readFeatures(geoJSON),
           }),
-          blur: 20,
-          radius: 20,
+          blur: 19,
+          radius: 19,
           opacity: 0.3,
           renderMode: 'image',
           weight: (feature) => {
@@ -148,8 +150,8 @@ export class MapComponent implements OnInit {
         source: new VectorSource({
           features: geojsonFormat.readFeatures(geoJSON),
         }),
-        blur: 5,
-        radius: 15,
+        blur: 19,
+        radius: 19,
         opacity: 0.3,
         renderMode: 'image',
         weight: (feature) => {
@@ -187,6 +189,22 @@ export class MapComponent implements OnInit {
 
   showAirPollutionSettings() {
     this.airPollutionSettings = !this.airPollutionSettings;
+  }
+
+  setProperty(){
+    if (this.map.getView().getZoom() > 10) {
+      if (this.map.getView().getZoom() >= 12) {
+        this.leqVectorLevel.setRadius(42);
+        this.leqVectorLevel.setBlur(38);
+      } else {
+        this.leqVectorLevel.setRadius(38);
+        this.leqVectorLevel.setBlur(38);
+      }
+
+    } else {
+      this.leqVectorLevel.setRadius(19);
+      this.leqVectorLevel.setBlur(19);
+    }
   }
 
   setRadiusSize(event) {
