@@ -242,6 +242,8 @@ export class MapComponent implements OnInit {
 
   showAirPollutionSettings() {
     this.airPollutionSettings = !this.airPollutionSettings;
+    var d = 132.41441;
+    console.log(Math.trunc(d));
   }
 
 /*  setProperty(){
