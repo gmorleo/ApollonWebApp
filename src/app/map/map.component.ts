@@ -124,7 +124,10 @@ export class MapComponent implements OnInit {
       this.zoom = zoom;
       this.box = box;
     }
+    this.setProperty()
   }
+
+
 
   setLeqVectorLevel(zoom,box,date) {
     return new Observable( observer => {
@@ -133,8 +136,8 @@ export class MapComponent implements OnInit {
           source: new VectorSource({
             features: geojsonFormat.readFeatures(geoJSON),
           }),
-          blur: 19,
-          radius: 19,
+          blur: 12,
+          radius: 12,
           opacity: 0.3,
           renderMode: 'image',
           weight: (feature) => {
