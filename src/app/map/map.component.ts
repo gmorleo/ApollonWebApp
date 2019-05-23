@@ -66,7 +66,7 @@ export class MapComponent implements OnInit {
   ngOnInit() {
     this.initializeMap();
     this.days = last7Days();
-    this.selectedDay = 6;
+    this.selectedDay = this.days.length-1;
     this.date = stringToDate(this.days[this.selectedDay]);
   }
 
@@ -90,43 +90,95 @@ export class MapComponent implements OnInit {
       var map = evt.map;
       var zoom = this.map.getView().getZoom();
       var box = this.getViewSize();
-      if (this.leqLevel) {
-        this.addLeqLevel(this.date);
+      console.log(this.checkMove())
+      if (this.leqLevel && this.checkMove()) {
+        this.setLeq(this.date);
       }
     });
   }
 
+  checkMove():boolean {
+    var zoom = this.map.getView().getZoom();
+    var box = this.getViewSize();
+    if ((zoom != this.zoom ||
+      ((this.box[0] - 1) - box[0] > 0) ||
+      ((this.box[1] - 1) - box[1] > 0) ||
+      ((this.box[2] + 1) - box[2] < 0) ||
+      ((this.box[3] + 1) - box[3] < 0)) &&
+      (zoom < 14)) {
+      this.zoom = zoom;
+      this.box = box;
+      return true;
+    }
+    return false;
+  }
+
   showLeqLevel() {
     if (this.leqLevel == false) {
-      this.addLeqLevel(this.date);
+      this.setLeq(this.date);
     } else {
       this.map.removeLayer(this.leqVectorLevel);
       this.zoom = 0;
     }
   }
 
-  addLeqLevel(date) {
+/*  addLeqLevel(date) {
+    console.log("adfa");
+    if (this.leqLevel) {
+      console.log("yes");
+      var zoom = this.map.getView().getZoom();
+      var box = this.getViewSize();
+      if ((zoom != this.zoom ||
+        ((this.box[0] - 1) - box[0] > 0) ||
+        ((this.box[1] - 1) - box[1] > 0) ||
+        ((this.box[2] + 1) - box[2] < 0) ||
+        ((this.box[3] + 1) - box[3] < 0)) &&
+        (zoom < 14)) {
+        this.showSpinner = true;
+        this.map.removeLayer(this.leqVectorLevel);
+        this.setLeqVectorLevel(zoom, box, date).subscribe(res => {
+          this.setProperty();
+          this.map.addLayer(this.leqVectorLevel);
+          this.showSpinner = false;
+        }, error1 => {
+          console.log("errore")
+        });
+        this.zoom = zoom;
+        this.box = box;
+      }
+    }
+  }*/
+
+  setLeq(date) {
+    this.showSpinner = true;
+
+    this.map.removeLayer(this.leqVectorLevel);
     var zoom = this.map.getView().getZoom();
     var box = this.getViewSize();
-    if ((zoom!=this.zoom ||
-        ((this.box[0]-1)-box[0] > 0) ||
-        ((this.box[1]-1)-box[1] > 0) ||
-        ((this.box[2]+1)-box[2] < 0) ||
-        ((this.box[3]+1)-box[3] < 0)) &&
-        (zoom < 14)) {
-      this.showSpinner = true;
-      this.map.removeLayer(this.leqVectorLevel);
-      this.setLeqVectorLevel(zoom,box,date).subscribe( res => {
-        this.setProperty();
-        this.map.addLayer(this.leqVectorLevel);
-        this.showSpinner = false;
-      }, error1 => {console.log("errore")});
-      this.zoom = zoom;
-      this.box = box;
-    }
+
+    this.mongoRestService.getGeoJSONRidotti(zoom,box[0]-1,box[1]-1,box[2]+1,box[3]+1,date).subscribe(geoJSON => {
+      this.leqVectorLevel = new HeatmapLayer({
+        source: new VectorSource({
+          features: geojsonFormat.readFeatures(geoJSON),
+        }),
+        blur: 19,
+        radius: 19,
+        opacity: 0.3,
+        renderMode: 'image',
+        weight: (feature) => {
+          var weightProperty = feature.get('leq');
+          weightProperty = weightProperty / maxPollution; // perform some calculation to get weightProperty between 0 - 1
+          return weightProperty;
+        }
+      });
+
+      this.setProperty();
+      this.map.addLayer(this.leqVectorLevel);
+      this.showSpinner = false;
+    });
   }
 
-  setLeqVectorLevel(zoom,box,date) {
+/*  setLeqVectorLevel(zoom,box,date) {
     return new Observable( observer => {
       this.mongoRestService.getGeoJSONRidotti(zoom,box[0]-1,box[1]-1,box[2]+1,box[3]+1,date).subscribe(geoJSON => {
         this.leqVectorLevel = new HeatmapLayer({
@@ -147,9 +199,9 @@ export class MapComponent implements OnInit {
         observer.complete();
       });
     })
-  }
+  }*/
 
-  setAirPollutionHeatmap() {
+/*  setAirPollutionHeatmap() {
     this.mongoRestService.getGeoJSON().subscribe( geoJSON => {
       this.airPollutionVector = new HeatmapLayer({
         source: new VectorSource({
@@ -184,19 +236,13 @@ export class MapComponent implements OnInit {
     } else {
       this.map.removeLayer(this.airPollutionVector);
     }
-  }
-
-/*  setTravelTimeDate() {
-    this.mongoRestService.getDate().subscribe( res => {
-      this.date = res;
-    })
   }*/
 
   showAirPollutionSettings() {
     this.airPollutionSettings = !this.airPollutionSettings;
   }
 
-  setProperty(){
+/*  setProperty(){
     if (this.map.getView().getZoom() > 10) {
       if (this.map.getView().getZoom() >= 12) {
         this.leqVectorLevel.setRadius(42);
@@ -205,12 +251,29 @@ export class MapComponent implements OnInit {
         this.leqVectorLevel.setRadius(38);
         this.leqVectorLevel.setBlur(38);
       }
-
     } else {
       this.leqVectorLevel.setRadius(19);
       this.leqVectorLevel.setBlur(19);
     }
+  }*/
+
+  setProperty () {
+    var zoom = this.map.getView().getZoom();
+    switch(true) {
+      case (zoom>10):
+        this.leqVectorLevel.setRadius(42);
+        this.leqVectorLevel.setBlur(38);
+        break;
+      case (zoom>=12):
+        this.leqVectorLevel.setRadius(38);
+        this.leqVectorLevel.setBlur(38);
+        break;
+      default:
+        this.leqVectorLevel.setRadius(19);
+        this.leqVectorLevel.setBlur(19);
+    }
   }
+/*
 
   setRadiusSize(event) {
     this.leqVectorLevel.setRadius(event.value);
@@ -223,6 +286,7 @@ export class MapComponent implements OnInit {
   setOpacity(event) {
     this.leqVectorLevel.setOpacity(event.value);
   }
+*/
 
 
 
@@ -235,6 +299,9 @@ export class MapComponent implements OnInit {
 
   changeDate() {
     this.date = stringToDate(this.days[this.selectedDay]);
+    if (this.leqLevel) {
+      this.setLeq(this.date);
+    }
   }
 }
 
