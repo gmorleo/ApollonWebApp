@@ -12,6 +12,7 @@ import {map} from 'rxjs/operators';
 import { fromLonLat, transform , transformExtent} from 'ol/proj';
 import {toObservable} from '@angular/forms/src/validators';
 import {Box} from '../models/box';
+import {MatSliderChange} from '@angular/material';
 
 const   geojsonFormat = new GeoJSON({
   extractStyles: false,
@@ -41,8 +42,9 @@ export class MapComponent implements OnInit {
   leqLevel: boolean = false;
   airPollutionSettings: boolean = false;
 
-  days = ["12/05","13/05","14/05","15/05","16/05","17/05","18/05","19/05"];
-  date = [];
+  days = [];
+  selectedDay;
+  date: Date;
 
   map: Map;
 
@@ -57,11 +59,15 @@ export class MapComponent implements OnInit {
       map(result => result.matches)
     );*/
 
+
   constructor(private breakpointObserver: BreakpointObserver, public mongoRestService: MongoRestService) {
   }
 
   ngOnInit() {
     this.initializeMap();
+    this.days = last7Days();
+    this.selectedDay = 6;
+    this.date = stringToDate(this.days[this.selectedDay]);
   }
 
   initializeMap() {
@@ -85,21 +91,21 @@ export class MapComponent implements OnInit {
       var zoom = this.map.getView().getZoom();
       var box = this.getViewSize();
       if (this.leqLevel) {
-        this.addLeqLevel();
+        this.addLeqLevel(this.date);
       }
     });
   }
 
   showLeqLevel() {
     if (this.leqLevel == false) {
-      this.addLeqLevel();
+      this.addLeqLevel(this.date);
     } else {
       this.map.removeLayer(this.leqVectorLevel);
       this.zoom = 0;
     }
   }
 
-  addLeqLevel() {
+  addLeqLevel(date) {
     var zoom = this.map.getView().getZoom();
     var box = this.getViewSize();
     if ((zoom!=this.zoom ||
@@ -110,7 +116,7 @@ export class MapComponent implements OnInit {
         (zoom < 14)) {
       this.showSpinner = true;
       this.map.removeLayer(this.leqVectorLevel);
-      this.setLeqVectorLevel(zoom,box).subscribe( res => {
+      this.setLeqVectorLevel(zoom,box,date).subscribe( res => {
         this.setProperty();
         this.map.addLayer(this.leqVectorLevel);
         this.showSpinner = false;
@@ -118,12 +124,11 @@ export class MapComponent implements OnInit {
       this.zoom = zoom;
       this.box = box;
     }
-
   }
 
-  setLeqVectorLevel(zoom,box) {
+  setLeqVectorLevel(zoom,box,date) {
     return new Observable( observer => {
-      this.mongoRestService.getGeoJSONRidotti(zoom,box[0]-1,box[1]-1,box[2]+1,box[3]+1).subscribe(geoJSON => {
+      this.mongoRestService.getGeoJSONRidotti(zoom,box[0]-1,box[1]-1,box[2]+1,box[3]+1,date).subscribe(geoJSON => {
         this.leqVectorLevel = new HeatmapLayer({
           source: new VectorSource({
             features: geojsonFormat.readFeatures(geoJSON),
@@ -181,11 +186,11 @@ export class MapComponent implements OnInit {
     }
   }
 
-  setTravelTimeDate() {
+/*  setTravelTimeDate() {
     this.mongoRestService.getDate().subscribe( res => {
       this.date = res;
     })
-  }
+  }*/
 
   showAirPollutionSettings() {
     this.airPollutionSettings = !this.airPollutionSettings;
@@ -219,11 +224,7 @@ export class MapComponent implements OnInit {
     this.leqVectorLevel.setOpacity(event.value);
   }
 
-  changeDate() {
-    if (this.airPollutionLevel) {
-      this.setAirPollutionHeatmap();
-    }
-  }
+
 
 
   getViewSize():any {
@@ -231,4 +232,43 @@ export class MapComponent implements OnInit {
     var box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
     return box;
   }
+
+  changeDate() {
+    this.date = stringToDate(this.days[this.selectedDay]);
+  }
+}
+
+function formatDate(date){
+  var dd = date.getDate();
+  var mm = date.getMonth()+1;
+  //var yyyy = date.getFullYear();
+  if(dd<10) {dd='0'+dd}
+  if(mm<10) {mm='0'+mm}
+  //date = dd+'/'+mm+'/'+yyyy;
+  date = dd+'/'+mm
+  return date
+}
+
+function last7Days () {
+  var result = [];
+  var i = 7;
+  while (i!=0) {
+    i--;
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    result.push( formatDate(d) )
+  }
+/*  for (var i=6; i>0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    result.push( formatDate(d) )
+  }*/
+  return result;
+  //return(result.join(','));
+}
+
+function stringToDate(str) {
+  var split = str.split("/");
+  var date = new Date("2019-"+split[1]+"-"+split[0]);
+  return date;
 }

@@ -16,8 +16,8 @@ export class MongoRestService {
     return request;
   }
 
-  getGeoJSONRidotti(zoom, lon_min,lat_min,lon_max,lat_max):Observable<GeoJSON> {
-    let request = this.http.get<GeoJSON>("http://localhost:8080/test/getJongo/"+lon_min+"/"+lat_min+"/"+lon_max+"/"+lat_max+"/"+zoom+"/");
+  getGeoJSONRidotti(zoom, lon_min,lat_min,lon_max,lat_max, date: Date):Observable<GeoJSON> {
+    let request = this.http.get<GeoJSON>("http://localhost:8080/test/getJongo/"+lon_min+"/"+lat_min+"/"+lon_max+"/"+lat_max+"/"+zoom+"/"+date.getFullYear()+"/"+(date.getMonth()+1)+"/"+date.getDate());
     console.log(request);
     return request;
   }
