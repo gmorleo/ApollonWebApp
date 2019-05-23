@@ -8,7 +8,7 @@ import XYZ from 'ol/source/XYZ';
 import {MongoRestService} from '../services/mongo-rest.service';
 import {Observable, Observer} from 'rxjs';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
-import {map} from 'rxjs/operators';
+import {catchError, map} from 'rxjs/operators';
 import { fromLonLat, transform , transformExtent} from 'ol/proj';
 import {toObservable} from '@angular/forms/src/validators';
 import {Box} from '../models/box';
@@ -90,8 +90,9 @@ export class MapComponent implements OnInit {
       var map = evt.map;
       var zoom = this.map.getView().getZoom();
       var box = this.getViewSize();
-      console.log(this.checkMove())
-      if (this.leqLevel && this.checkMove()) {
+      console.log(this.leqLevel);
+      if (this.leqLevel == true && this.checkMove() == true){
+        console.log("adffafga");
         this.setLeq(this.date);
       }
     });
@@ -157,6 +158,7 @@ export class MapComponent implements OnInit {
     var box = this.getViewSize();
 
     this.mongoRestService.getGeoJSONRidotti(zoom,box[0]-1,box[1]-1,box[2]+1,box[3]+1,date).subscribe(geoJSON => {
+      console.log("aggiorno...");
       this.leqVectorLevel = new HeatmapLayer({
         source: new VectorSource({
           features: geojsonFormat.readFeatures(geoJSON),
@@ -175,7 +177,7 @@ export class MapComponent implements OnInit {
       this.setProperty();
       this.map.addLayer(this.leqVectorLevel);
       this.showSpinner = false;
-    });
+    },error1 => {this.showSpinner = false});
   }
 
 /*  setLeqVectorLevel(zoom,box,date) {
