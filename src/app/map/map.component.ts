@@ -20,10 +20,12 @@ const   geojsonFormat = new GeoJSON({
 });
 
 const lecce = fromLonLat([18.174631, 40.354130]);
-const default_zoom = 10;
-const minZoom = 3;
+
+const gal = fromLonLat([13.174631, 40.354130]);
+const default_zoom = 15;
+const minZoom = 4;
 const maxZoom = 17;
-const maxPollution =0.7;
+const maxPollution =1.5;
 
 
 @Component({
@@ -47,11 +49,16 @@ export class MapComponent implements OnInit {
   date: Date;
 
   map: Map;
+  vectorMap = {};
+  storedTile = {};
 
   airPollutionVector: HeatmapLayer;
   leqVectorLevel: HeatmapLayer;
 
+  leqVectorSource: VectorSource = [];
+
   zoom = 0;
+  center: any;
   box: any;
 
 /*  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
@@ -64,10 +71,14 @@ export class MapComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.initializeMap();
+
+    this.center = transform(lecce,'EPSG:3857','EPSG:4326');
+    this.zoom = default_zoom;
     this.days = last7Days();
     this.selectedDay = this.days.length-1;
     this.date = stringToDate(this.days[this.selectedDay]);
+    this.initializeMap();
+    this.initializeLeqLevel();
   }
 
   initializeMap() {
@@ -86,198 +97,156 @@ export class MapComponent implements OnInit {
       })
     });
 
+/*    this.map.on('moveend', (evt) => {
+      if (this.leqLevel) {
+        this.update(evt);
+        if(zoom != this.zoom) {
+          this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
+        }
+      }
+    });*/
+
     this.map.on('moveend', (evt) => {
       var map = evt.map;
-      var zoom = this.map.getView().getZoom();
-      var box = this.getViewSize();
-      console.log(this.leqLevel);
-      if (this.leqLevel == true && this.checkMove() == true){
-        console.log("adffafga");
-        this.setLeq(this.date);
+      var zoom = Math.trunc(this.map.getView().getZoom());
+      var vectorKey = zoom+"/"+formatDate(this.date, 1);
+      if (this.leqLevel) {
+        this.setSource(vectorKey);
+        if(zoom != this.zoom) {
+          this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
+        }
       }
     });
   }
 
-  checkMove():boolean {
-    var zoom = this.map.getView().getZoom();
-    var box = this.getViewSize();
-    if ((zoom != this.zoom ||
-      ((this.box[0] - 1) - box[0] > 0) ||
-      ((this.box[1] - 1) - box[1] > 0) ||
-      ((this.box[2] + 1) - box[2] < 0) ||
-      ((this.box[3] + 1) - box[3] < 0)) &&
-      (zoom < 14)) {
-      this.zoom = zoom;
-      this.box = box;
-      return true;
+/*
+  update(evt) {
+    var map = evt.map;
+    var zoom = Math.trunc(map.getView().getZoom());
+    var vectorKey = zoom+"/"+formatDate(this.date, 1);
+    this.setSource(vectorKey);
+    if(zoom != this.zoom) {
+      this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
     }
-    return false;
+  }
+*/
+
+  updateLeq() {
+    var zoom = Math.trunc(this.map.getView().getZoom());
+    var vectorKey = zoom+"/"+formatDate(this.date, 1);
+    this.setSource(vectorKey);
+    this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
+  }
+
+  initializeLeqLevel() {
+    this.leqVectorLevel = new HeatmapLayer({
+      blur: 15,
+      radius: 20,
+      opacity: 0.3,
+      renderMode: 'image',
+      weight: (feature) => {
+        var weightProperty = feature.get('leq');
+        weightProperty = weightProperty / maxPollution; // perform some calculation to get weightProperty between 0 - 1
+        return weightProperty;
+      }
+    });
   }
 
   showLeqLevel() {
     if (this.leqLevel == false) {
-      this.setLeq(this.date);
+      this.map.addLayer(this.leqVectorLevel);
+      this.updateLeq();
     } else {
       this.map.removeLayer(this.leqVectorLevel);
-      this.zoom = 0;
     }
   }
 
-/*  addLeqLevel(date) {
-    console.log("adfa");
-    if (this.leqLevel) {
-      console.log("yes");
-      var zoom = this.map.getView().getZoom();
-      var box = this.getViewSize();
-      if ((zoom != this.zoom ||
-        ((this.box[0] - 1) - box[0] > 0) ||
-        ((this.box[1] - 1) - box[1] > 0) ||
-        ((this.box[2] + 1) - box[2] < 0) ||
-        ((this.box[3] + 1) - box[3] < 0)) &&
-        (zoom < 14)) {
-        this.showSpinner = true;
-        this.map.removeLayer(this.leqVectorLevel);
-        this.setLeqVectorLevel(zoom, box, date).subscribe(res => {
-          this.setProperty();
-          this.map.addLayer(this.leqVectorLevel);
-          this.showSpinner = false;
-        }, error1 => {
-          console.log("errore")
-        });
-        this.zoom = zoom;
-        this.box = box;
+  setSource(vectorKey) {
+      var glbox = this.map.getView().calculateExtent(this.map.getSize());
+      var box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
+      var dim_tile = Math.ceil((box[2]-box[0])/4);
+      var start_tile = [box[0]-(box[0]%dim_tile), box[1]-(box[1]%dim_tile)];
+      if (!(vectorKey in this.vectorMap)) {
+        this.vectorMap[vectorKey]= new VectorSource();
+        this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
       }
-    }
-  }*/
-
-  setLeq(date) {
-    this.showSpinner = true;
-
-    this.map.removeLayer(this.leqVectorLevel);
-    var zoom = this.map.getView().getZoom();
-    var box = this.getViewSize();
-
-    this.mongoRestService.getGeoJSONRidotti(zoom,box[0]-1,box[1]-1,box[2]+1,box[3]+1,date).subscribe(geoJSON => {
-      console.log("aggiorno...");
-      this.leqVectorLevel = new HeatmapLayer({
-        source: new VectorSource({
-          features: geojsonFormat.readFeatures(geoJSON),
-        }),
-        blur: 19,
-        radius: 19,
-        opacity: 0.3,
-        renderMode: 'image',
-        weight: (feature) => {
-          var weightProperty = feature.get('leq');
-          weightProperty = weightProperty / maxPollution; // perform some calculation to get weightProperty between 0 - 1
-          return weightProperty;
-        }
-      });
-
-      this.setProperty();
-      this.map.addLayer(this.leqVectorLevel);
-      this.showSpinner = false;
-    },error1 => {this.showSpinner = false});
-  }
-
-/*  setLeqVectorLevel(zoom,box,date) {
-    return new Observable( observer => {
-      this.mongoRestService.getGeoJSONRidotti(zoom,box[0]-1,box[1]-1,box[2]+1,box[3]+1,date).subscribe(geoJSON => {
-        this.leqVectorLevel = new HeatmapLayer({
-          source: new VectorSource({
-            features: geojsonFormat.readFeatures(geoJSON),
-          }),
-          blur: 19,
-          radius: 19,
-          opacity: 0.3,
-          renderMode: 'image',
-          weight: (feature) => {
-            var weightProperty = feature.get('leq');
-            weightProperty = weightProperty / maxPollution; // perform some calculation to get weightProperty between 0 - 1
-            return weightProperty;
+      console.log("Tiles caricate: ");
+      var tile = [start_tile[0], start_tile[1]];
+      while (tile[1] <= box[3]+dim_tile){
+        while (tile[0] <= box[2]+dim_tile){
+          var tileKey =tile[0]+"/"+tile[1]+"/"+(tile[0]+dim_tile)+"/"+(tile[1]+dim_tile)+"/"+vectorKey;
+          if (!(tileKey in this.storedTile)) {
+            console.log(tileKey);
+            this.storedTile[tileKey] = "1";
+            this.mongoRestService.getTile(tileKey).subscribe(geoJSON => {
+              this.vectorMap[vectorKey].addFeatures(geojsonFormat.readFeatures(geoJSON));
+            });
           }
-        });
-        observer.next(true);
-        observer.complete();
-      });
-    })
-  }*/
-
-/*  setAirPollutionHeatmap() {
-    this.mongoRestService.getGeoJSON().subscribe( geoJSON => {
-      this.airPollutionVector = new HeatmapLayer({
-        source: new VectorSource({
-          features: geojsonFormat.readFeatures(geoJSON),
-        }),
-        blur: 19,
-        radius: 19,
-        opacity: 0.3,
-        renderMode: 'image',
-        weight: (feature) => {
-          // get your feature property
-          var weightProperty = feature.get('leq');
-          // perform some calculation to get weightProperty between 0 - 1
-          weightProperty = weightProperty / maxPollution; // this was your suggestion - make sure this makes sense
-          return weightProperty;
+          tile = [tile[0] + dim_tile, tile[1]];
         }
-      });
-      this.airPollutionVector.getSource().on('addfeature', function(event) {
-        // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
-        // standards-violating <magnitude> tag in each Placemark.  We extract it from
-        // the Placemark's name instead.
-        var name = event.feature.get('leq');
-        var magnitude = parseFloat(name);
-        event.feature.set('weight', magnitude);
-      });
-    });
+        tile = [start_tile[0], tile[1] + dim_tile];
+      }
   }
-
-  addAirPollutionLayer() {
-    if (this.airPollutionLevel == false) {
-      this.map.addLayer(this.airPollutionVector);
-    } else {
-      this.map.removeLayer(this.airPollutionVector);
-    }
-  }*/
 
   showAirPollutionSettings() {
     this.airPollutionSettings = !this.airPollutionSettings;
-    var d = 132.41441;
-    console.log(Math.trunc(d));
   }
 
-/*  setProperty(){
-    if (this.map.getView().getZoom() > 10) {
-      if (this.map.getView().getZoom() >= 12) {
-        this.leqVectorLevel.setRadius(42);
-        this.leqVectorLevel.setBlur(38);
-      } else {
-        this.leqVectorLevel.setRadius(38);
-        this.leqVectorLevel.setBlur(38);
+  setProperty (zoom) {
+    switch(zoom) {
+      case 16:{
+        this.leqVectorLevel.setRadius(30);
+        this.leqVectorLevel.setBlur(28);
+        break;
       }
-    } else {
-      this.leqVectorLevel.setRadius(19);
-      this.leqVectorLevel.setBlur(19);
-    }
-  }*/
-
-  setProperty () {
-    var zoom = this.map.getView().getZoom();
-    switch(true) {
-      case (zoom>10):
-        this.leqVectorLevel.setRadius(42);
-        this.leqVectorLevel.setBlur(38);
+      case 14:{
+        this.leqVectorLevel.setRadius(25);
+        this.leqVectorLevel.setBlur(25);
         break;
-      case (zoom>=12):
+      }
+      case 12:{
         this.leqVectorLevel.setRadius(38);
-        this.leqVectorLevel.setBlur(38);
+        this.leqVectorLevel.setBlur(20);
         break;
+      }
+      case 10:{
+        this.leqVectorLevel.setRadius(14);
+        this.leqVectorLevel.setBlur(20);
+        break;
+      }
+      case 8:{
+        console.log("case");
+        this.leqVectorLevel.setRadius(7);
+        this.leqVectorLevel.setBlur(15);
+        break;
+      }
+      case 6:{
+        console.log("case");
+        this.leqVectorLevel.setRadius(10);
+        this.leqVectorLevel.setBlur(10);
+        break;
+      }
+      case 4:{
+        this.leqVectorLevel.setRadius(15);
+        this.leqVectorLevel.setBlur(7);
+        break;
+      }
+
       default:
-        this.leqVectorLevel.setRadius(19);
-        this.leqVectorLevel.setBlur(19);
+        this.leqVectorLevel.setRadius(4);
+        this.leqVectorLevel.setBlur(12);
     }
+
+/*    3 10 10
+
+    5 5 10
+
+    7 5 20
+
+    9 5 10
+
+    11 10 20*/
   }
-/*
 
   setRadiusSize(event) {
     this.leqVectorLevel.setRadius(event.value);
@@ -290,33 +259,29 @@ export class MapComponent implements OnInit {
   setOpacity(event) {
     this.leqVectorLevel.setOpacity(event.value);
   }
-*/
-
-
-
-
-  getViewSize():any {
-    var glbox = this.map.getView().calculateExtent(this.map.getSize());
-    var box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
-    return box;
-  }
 
   changeDate() {
     this.date = stringToDate(this.days[this.selectedDay]);
     if (this.leqLevel) {
-      this.setLeq(this.date);
+      this.updateLeq();
     }
   }
 }
 
-function formatDate(date){
+function formatDate(date, mode){
   var dd = date.getDate();
   var mm = date.getMonth()+1;
-  //var yyyy = date.getFullYear();
+  var yyyy = date.getFullYear();
   if(dd<10) {dd='0'+dd}
   if(mm<10) {mm='0'+mm}
-  //date = dd+'/'+mm+'/'+yyyy;
-  date = dd+'/'+mm
+  switch (mode) {
+    case 1:
+      date = yyyy+'/'+mm+'/'+dd;
+      break;
+    case 2:
+      date = dd+'/'+mm
+      break;
+  }
   return date
 }
 
@@ -327,13 +292,8 @@ function last7Days () {
     i--;
     var d = new Date();
     d.setDate(d.getDate() - i);
-    result.push( formatDate(d) )
+    result.push( formatDate(d,2) )
   }
-/*  for (var i=6; i>0; i--) {
-    var d = new Date();
-    d.setDate(d.getDate() - i);
-    result.push( formatDate(d) )
-  }*/
   return result;
   //return(result.join(','));
 }
