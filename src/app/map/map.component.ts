@@ -6,13 +6,9 @@ import {Heatmap as HeatmapLayer, Tile as TileLayer} from 'ol/layer.js';
 import VectorSource from 'ol/source/Vector.js';
 import XYZ from 'ol/source/XYZ';
 import {MongoRestService} from '../services/mongo-rest.service';
-import {Observable, Observer} from 'rxjs';
-import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
-import {catchError, map} from 'rxjs/operators';
-import { fromLonLat, transform , transformExtent} from 'ol/proj';
-import {toObservable} from '@angular/forms/src/validators';
-import {Box} from '../models/box';
-import {MatSliderChange} from '@angular/material';
+import {BreakpointObserver} from '@angular/cdk/layout';
+import { fromLonLat, transformExtent} from 'ol/proj';
+
 
 const   geojsonFormat = new GeoJSON({
   extractStyles: false,
@@ -22,9 +18,9 @@ const   geojsonFormat = new GeoJSON({
 const lecce = fromLonLat([18.174631, 40.354130]);
 
 const gal = fromLonLat([13.174631, 40.354130]);
-const default_zoom = 15;
-const minZoom = 4;
-const maxZoom = 17;
+const default_zoom = 9;
+const minZoom = 3;
+const maxZoom = 16;
 const maxPollution =1.5;
 
 
@@ -40,7 +36,7 @@ export class MapComponent implements OnInit {
   opened: boolean = true;
   showSpinner: boolean = false;
 
-  airPollutionLevel: boolean = false;
+  splLevel: boolean = false;
   leqLevel: boolean = false;
   airPollutionSettings: boolean = false;
 
@@ -49,38 +45,45 @@ export class MapComponent implements OnInit {
   date: Date;
 
   map: Map;
-  vectorMap = {};
+  leqVectorMap = {};
   storedTile = {};
 
-  airPollutionVector: HeatmapLayer;
-  leqVectorLevel: HeatmapLayer;
-
-  leqVectorSource: VectorSource = [];
-
+  leqHeatmapLevel: HeatmapLayer;
   zoom = 0;
-  center: any;
-  box: any;
-
-/*  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
-    .pipe(
-      map(result => result.matches)
-    );*/
-
 
   constructor(private breakpointObserver: BreakpointObserver, public mongoRestService: MongoRestService) {
   }
 
   ngOnInit() {
-
-    this.center = transform(lecce,'EPSG:3857','EPSG:4326');
-    this.zoom = default_zoom;
+    this.initializeTimeTravel();
+    this.initializeMap();
+    this.initializeLeqLevel();
+    this.addMapListener();
+  }
+  
+  //Inizializzo il time travel
+  initializeTimeTravel() {
     this.days = last7Days();
     this.selectedDay = this.days.length-1;
     this.date = stringToDate(this.days[this.selectedDay]);
-    this.initializeMap();
-    this.initializeLeqLevel();
   }
 
+  //Inizializzo il livello Heatmap vuoto
+  initializeLeqLevel() {
+    this.leqHeatmapLevel = new HeatmapLayer({
+      blur: 15,
+      radius: 20,
+      opacity: 0.3,
+      renderMode: 'image',
+      weight: (feature) => {
+        var weightProperty = feature.get('leq');
+        weightProperty = weightProperty / maxPollution; // perform some calculation to get weightProperty between 0 - 1
+        return weightProperty;
+      }
+    });
+  }
+
+  //Inizializzo la mappa
   initializeMap() {
     this.map = new Map({
       layers: [
@@ -96,90 +99,60 @@ export class MapComponent implements OnInit {
         maxZoom: maxZoom
       })
     });
+    this.zoom = default_zoom;
+  }
 
-/*    this.map.on('moveend', (evt) => {
-      if (this.leqLevel) {
-        this.update(evt);
-        if(zoom != this.zoom) {
-          this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
-        }
-      }
-    });*/
-
+  //Aggiungo il listener sulla mappa
+  addMapListener() {
     this.map.on('moveend', (evt) => {
       var map = evt.map;
       var zoom = Math.trunc(this.map.getView().getZoom());
-      var vectorKey = zoom+"/"+formatDate(this.date, 1);
+      console.log("zoom: ",zoom);
       if (this.leqLevel) {
-        this.setSource(vectorKey);
+        var vectorKey = this.updateLeq();
         if(zoom != this.zoom) {
-          this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
+          console.log("cambio sorgente",zoom);
+          this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
         }
       }
     });
   }
 
-/*
-  update(evt) {
-    var map = evt.map;
-    var zoom = Math.trunc(map.getView().getZoom());
-    var vectorKey = zoom+"/"+formatDate(this.date, 1);
-    this.setSource(vectorKey);
-    if(zoom != this.zoom) {
-      this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
-    }
-  }
-*/
-
   updateLeq() {
     var zoom = Math.trunc(this.map.getView().getZoom());
+    if (zoom%2 == 1) {
+      zoom += 1;
+    }
     var vectorKey = zoom+"/"+formatDate(this.date, 1);
     this.setSource(vectorKey);
-    this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
+    return vectorKey;
   }
 
-  initializeLeqLevel() {
-    this.leqVectorLevel = new HeatmapLayer({
-      blur: 15,
-      radius: 20,
-      opacity: 0.3,
-      renderMode: 'image',
-      weight: (feature) => {
-        var weightProperty = feature.get('leq');
-        weightProperty = weightProperty / maxPollution; // perform some calculation to get weightProperty between 0 - 1
-        return weightProperty;
-      }
-    });
-  }
-
-  showLeqLevel() {
-    if (this.leqLevel == false) {
-      this.map.addLayer(this.leqVectorLevel);
-      this.updateLeq();
-    } else {
-      this.map.removeLayer(this.leqVectorLevel);
-    }
-  }
-
+  //Imposto la sorgente vettoriale alla Heatmap
   setSource(vectorKey) {
       var glbox = this.map.getView().calculateExtent(this.map.getSize());
       var box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
       var dim_tile = Math.ceil((box[2]-box[0])/4);
       var start_tile = [box[0]-(box[0]%dim_tile), box[1]-(box[1]%dim_tile)];
-      if (!(vectorKey in this.vectorMap)) {
-        this.vectorMap[vectorKey]= new VectorSource();
-        this.leqVectorLevel.setSource(this.vectorMap[vectorKey]);
+
+      //Creo un livello vettoriale per ogni ogni livello di zoom, se non esiste ne creo uno, così da non dover ricaricare le tiles già caricate
+      if (!(vectorKey in this.leqVectorMap)) {
+        this.leqVectorMap[vectorKey]= new VectorSource();
+        this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
       }
+
       console.log("Tiles caricate: ");
       var tile = [start_tile[0], start_tile[1]];
       while (tile[1] <= box[3]+dim_tile){
         while (tile[0] <= box[2]+dim_tile){
+          //Inizio a scorrere le tile salvando quelle che ho già scaricato, così che prima di scaricarne una controllo se è già stata scaricata
           var tileKey =tile[0]+"/"+tile[1]+"/"+(tile[0]+dim_tile)+"/"+(tile[1]+dim_tile)+"/"+vectorKey;
           if (!(tileKey in this.storedTile)) {
             console.log(tileKey);
             this.storedTile[tileKey] = "1";
+            //Se la tile non è presente allora la scarico e ne aggiungo i punti alla sorgente vettoriale corrispondente
             this.mongoRestService.getTile(tileKey).subscribe(geoJSON => {
-              this.vectorMap[vectorKey].addFeatures(geojsonFormat.readFeatures(geoJSON));
+              this.leqVectorMap[vectorKey].addFeatures(geojsonFormat.readFeatures(geoJSON));
             });
           }
           tile = [tile[0] + dim_tile, tile[1]];
@@ -192,78 +165,33 @@ export class MapComponent implements OnInit {
     this.airPollutionSettings = !this.airPollutionSettings;
   }
 
-  setProperty (zoom) {
-    switch(zoom) {
-      case 16:{
-        this.leqVectorLevel.setRadius(30);
-        this.leqVectorLevel.setBlur(28);
-        break;
-      }
-      case 14:{
-        this.leqVectorLevel.setRadius(25);
-        this.leqVectorLevel.setBlur(25);
-        break;
-      }
-      case 12:{
-        this.leqVectorLevel.setRadius(38);
-        this.leqVectorLevel.setBlur(20);
-        break;
-      }
-      case 10:{
-        this.leqVectorLevel.setRadius(14);
-        this.leqVectorLevel.setBlur(20);
-        break;
-      }
-      case 8:{
-        console.log("case");
-        this.leqVectorLevel.setRadius(7);
-        this.leqVectorLevel.setBlur(15);
-        break;
-      }
-      case 6:{
-        console.log("case");
-        this.leqVectorLevel.setRadius(10);
-        this.leqVectorLevel.setBlur(10);
-        break;
-      }
-      case 4:{
-        this.leqVectorLevel.setRadius(15);
-        this.leqVectorLevel.setBlur(7);
-        break;
-      }
-
-      default:
-        this.leqVectorLevel.setRadius(4);
-        this.leqVectorLevel.setBlur(12);
+  showLeqLevel() {
+    if (this.leqLevel == false) {
+      this.map.addLayer(this.leqHeatmapLevel);
+      var vectorKey = this.updateLeq();
+      this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
+    } else {
+      this.map.removeLayer(this.leqHeatmapLevel);
     }
-
-/*    3 10 10
-
-    5 5 10
-
-    7 5 20
-
-    9 5 10
-
-    11 10 20*/
   }
 
   setRadiusSize(event) {
-    this.leqVectorLevel.setRadius(event.value);
+    this.leqHeatmapLevel.setRadius(event.value);
   }
 
   setBlurSize(event) {
-    this.leqVectorLevel.setBlur(event.value);
+    this.leqHeatmapLevel.setBlur(event.value);
   }
 
   setOpacity(event) {
-    this.leqVectorLevel.setOpacity(event.value);
+    this.leqHeatmapLevel.setOpacity(event.value);
   }
 
   changeDate() {
     this.date = stringToDate(this.days[this.selectedDay]);
     if (this.leqLevel) {
-      this.updateLeq();
+      var vectorKey = this.updateLeq();
+      this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
     }
   }
 }
