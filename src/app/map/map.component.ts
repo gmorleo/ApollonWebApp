@@ -39,7 +39,6 @@ export class MapComponent implements OnInit {
   leqLevel: boolean;
   @Input('splLevel')
   splLevel: boolean;
-  airPollutionSettings: boolean = false;
 
   days = [];
   selectedDay;
@@ -54,7 +53,7 @@ export class MapComponent implements OnInit {
   leqHeatmapLevel: HeatmapLayer;
   zoom = 0;
 
-  constructor(private breakpointObserver: BreakpointObserver, public mongoRestService: MongoRestService) {
+  constructor(public mongoRestService: MongoRestService) {
   }
 
   ngOnInit() {
@@ -64,42 +63,6 @@ export class MapComponent implements OnInit {
     this.addMapListener();
   }
 
-
-
-/*  ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
-    for (let propName in changes) {
-      if (propName == "leqLevel") {
-        let changedProp = changes[propName];
-        if (!changedProp.firstChange) {
-          console.log(changedProp);
-          this.addLeqLevel(changedProp.currentValue);
-        }
-      }
-    }
-  }*/
-
-/*  addLeqLevel() {
-    this.map.addLayer(this.leqHeatmapLevel);
-    var vectorKey = this.updateLeq();
-    this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
-  }*/
-
-
-
-
-/*  @Input()
-  set leq(leqLevel) {
-    this.leqLevel = leqLevel;
-    console.log(this.leqLevel);
-    if (this.leqLevel) {
-      this.map.addLayer(this.leqHeatmapLevel);
-      var vectorKey = this.updateLeq();
-      this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
-    } else {
-      //this.map.removeLayer(this.leqHeatmapLevel);
-    }
-  }*/
-  
   //Inizializzo il time travel
   initializeTimeTravel() {
     this.days = last7Days();
@@ -196,10 +159,6 @@ export class MapComponent implements OnInit {
       }
     }
     return vectorKey;
-  }
-
-  showAirPollutionSettings() {
-    this.airPollutionSettings = !this.airPollutionSettings;
   }
 
   setRadiusSize(event) {

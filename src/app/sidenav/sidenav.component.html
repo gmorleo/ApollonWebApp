@@ -17,9 +17,9 @@
             <li>
               <mat-list-item>
                 <mat-checkbox color="primary" class="example-margin">Inquinamento atmosferico</mat-checkbox>
-                <button mat-icon-button (click)="asd()"><mat-icon>settings</mat-icon></button>
+                <button mat-icon-button (click)="showLeqLevelSettings()"><mat-icon>settings</mat-icon></button>
               </mat-list-item>
-              <form class="settings-form" *ngIf="airPollutionSettings">
+              <form class="settings-form" *ngIf="leqLevelSettings">
                 <div>
                   <span class="settings-label">radius size</span>
                   <mat-slider color="primary" id="radius" min="1" max="50" step="1" value="5" thumbLabel (change)="mapComponent.setRadiusSize($event)"></mat-slider>
@@ -50,14 +50,3 @@
     <app-map [leqLevel]="leqLevel"></app-map>
   </mat-sidenav-content>
 </mat-sidenav-container>
-
-
-<!--
-<button (click)="setLeq()">Ciao</button>
-<app-map [leqLevel]="leqLevel"></app-map>
-<button (click)="setLeq()">Ciao</button>
-<button (click)="map.showLeqLevel()">Ciao</button>
-<button (click)="set()">Ciao</button>
-<app-map [leqLevel]="leqLevel" #map></app-map>
--->
-

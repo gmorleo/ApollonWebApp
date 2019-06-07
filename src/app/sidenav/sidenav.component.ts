@@ -14,7 +14,7 @@ export class SidenavComponent implements OnInit {
 
   splLevel: boolean = false;
   leqLevel: boolean = false;
-  airPollutionSettings: boolean = false;
+  leqLevelSettings: boolean = false;
 
   @ViewChild(MapComponent)
   private mapComponent: MapComponent;
@@ -31,5 +31,9 @@ export class SidenavComponent implements OnInit {
     } else {
       this.mapComponent.removeLeqLevel();
     }
+  }
+
+  showLeqLevelSettings() {
+    this.leqLevelSettings = !this.leqLevelSettings;
   }
 }
