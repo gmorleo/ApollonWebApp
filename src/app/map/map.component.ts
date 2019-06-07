@@ -6,7 +6,6 @@ import {Heatmap as HeatmapLayer, Tile as TileLayer} from 'ol/layer.js';
 import VectorSource from 'ol/source/Vector.js';
 import XYZ from 'ol/source/XYZ';
 import {MongoRestService} from '../services/mongo-rest.service';
-import {BreakpointObserver} from '@angular/cdk/layout';
 import { fromLonLat, transformExtent} from 'ol/proj';
 import {formatDate, last7Days, stringToDate} from '../../environments/environment';
 
@@ -108,8 +107,10 @@ export class MapComponent implements OnInit {
   addMapListener() {
     this.map.on('moveend', (evt) => {
       var map = evt.map;
+      //Se il livello è abilitato allora posso aggiornarlo
       if (this.leqLevel) {
         var leqSource = this.updateLeqSource();
+        //Se il vettore sorgente visualizzato è diverso da quello che mi serve allora lo aggiorno
         if(leqSource != this.currentLeqSource) {
           console.log("cambio livello");
           this.leqHeatmapLevel.setSource(this.leqVectorMap[leqSource]);
@@ -131,22 +132,26 @@ export class MapComponent implements OnInit {
   }
 
   updateLeqSource(): string {
+    //Crea il nome del vettore sorgente nel seguente modo: N_Livello/Data
     var zoom = Math.trunc(this.map.getView().getZoom());
     var vectorKey = level[zoom-3]+"/"+formatDate(this.date, 1);
 
+    //Calcola le dimensioni del box, la dimensione della tile, e da quali coordinate iniziare lo scorrimento
     var glbox = this.map.getView().calculateExtent(this.map.getSize());
     var box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
-
     var dim_tile = tiles_size[zoom-3];
     var start_tile = [box[0]-(box[0]%dim_tile), box[1]-(box[1]%dim_tile)];
 
+    //Se il vettore sorgente non è presente allora lo crea
     if (!(vectorKey in this.leqVectorMap)) {
       this.leqVectorMap[vectorKey]= new VectorSource();
     }
 
+    //Scorre la griglia
     console.log("Tiles caricate: ");
     for (var i=start_tile[1]; i <= box[3]+dim_tile; i = Math.trunc((i += dim_tile)*10)/10){
       for (var j=start_tile[0]; j <= box[2]+dim_tile; j = Math.trunc((j + dim_tile)*10)/10){
+        //Per ogni tile assegno un nome, e la salvo in memoria, così che se ho già richiesto quella tile non viene ricaricata
         var tileKey =j+"/"+i+"/"+(j+dim_tile)+"/"+(i+dim_tile)+"/"+vectorKey;
         if (!(tileKey in this.storedTile)) {
           console.log(tileKey);
@@ -173,6 +178,7 @@ export class MapComponent implements OnInit {
     this.leqHeatmapLevel.setOpacity(event.value);
   }
 
+  //Cambio la data di visualizzazione
   changeDate() {
     this.date = stringToDate(this.days[this.selectedDay]);
     if (this.leqLevel) {
