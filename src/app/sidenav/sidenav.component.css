@@ -1,0 +1,62 @@
+.toolbar-title {
+  margin: auto;
+  color: #333;
+  font-family: roboto;
+  font-size: 27px;
+}
+
+.nav-header {
+  height: 50px;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  color: #000;
+  background-color: mediumseagreen;
+  text-align: center;
+}
+
+.map {
+  height: 100%;
+  width: 100%;
+  /*  position: fixed;*/
+}
+
+.sidenav-container {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+}
+
+.sidenav {
+  width: 270px;
+}
+
+.sidenav .mat-toolbar {
+  background: inherit;
+
+}
+
+.sidenav-content  {
+  width: calc(100% - 270px);
+  /*  width: 100%;*/
+  /*  margin-right: auto;
+    margin-left: 0px !important;*/
+  box-sizing: border-box;
+}
+
+
+.mat-toolbar.mat-primary {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.settings-form{
+  padding-left: 15px;
+}
+
+.settings-label {
+  display: inline-block;
+  width: 80px;
+}

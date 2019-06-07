@@ -44,15 +44,17 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {CdkTableModule} from '@angular/cdk/table';
 import {CdkTreeModule} from '@angular/cdk/tree';
 import { MapComponent } from './map/map.component';
-import {FormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
 import { SpinnerComponent } from './spinner/spinner.component';
+import { SidenavComponent } from './sidenav/sidenav.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MapComponent,
-    SpinnerComponent
+    SpinnerComponent,
+    SidenavComponent
   ],
   imports: [
 
@@ -98,7 +100,8 @@ import { SpinnerComponent } from './spinner/spinner.component';
     LayoutModule,
     BrowserAnimationsModule,
     FormsModule,
-    HttpClientModule
+    HttpClientModule,
+    ReactiveFormsModule
   ],
   providers: [
     { provide: HAMMER_GESTURE_CONFIG, useClass: GestureConfig },

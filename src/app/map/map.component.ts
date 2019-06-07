@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Input, OnInit, SimpleChange} from '@angular/core';
 import Map from 'ol/Map.js';
 import View from 'ol/View.js';
 import {GeoJSON} from 'ol/format';
@@ -8,7 +8,7 @@ import XYZ from 'ol/source/XYZ';
 import {MongoRestService} from '../services/mongo-rest.service';
 import {BreakpointObserver} from '@angular/cdk/layout';
 import { fromLonLat, transformExtent} from 'ol/proj';
-
+import {formatDate, last7Days, stringToDate} from '../../environments/environment';
 
 const   geojsonFormat = new GeoJSON({
   extractStyles: false,
@@ -16,13 +16,12 @@ const   geojsonFormat = new GeoJSON({
 });
 
 const lecce = fromLonLat([18.174631, 40.354130]);
-
-const gal = fromLonLat([13.174631, 40.354130]);
 const default_zoom = 9;
 const minZoom = 3;
 const maxZoom = 16;
 const maxPollution =1.5;
-
+const level = [4,4,6,6,8,8,10,10,12,12,14,14,16,16];
+const tiles_size = [15,15,5,5,2,2,1.5,1.5,1,1,0.5,0.5,0.3,0.3];
 
 @Component({
   selector: 'app-map',
@@ -36,8 +35,10 @@ export class MapComponent implements OnInit {
   opened: boolean = true;
   showSpinner: boolean = false;
 
-  splLevel: boolean = false;
-  leqLevel: boolean = false;
+  @Input('leqLevel')
+  leqLevel: boolean;
+  @Input('splLevel')
+  splLevel: boolean;
   airPollutionSettings: boolean = false;
 
   days = [];
@@ -47,6 +48,8 @@ export class MapComponent implements OnInit {
   map: Map;
   leqVectorMap = {};
   storedTile = {};
+
+  currentLeqSource: string = "";
 
   leqHeatmapLevel: HeatmapLayer;
   zoom = 0;
@@ -60,6 +63,42 @@ export class MapComponent implements OnInit {
     this.initializeLeqLevel();
     this.addMapListener();
   }
+
+
+
+/*  ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
+    for (let propName in changes) {
+      if (propName == "leqLevel") {
+        let changedProp = changes[propName];
+        if (!changedProp.firstChange) {
+          console.log(changedProp);
+          this.addLeqLevel(changedProp.currentValue);
+        }
+      }
+    }
+  }*/
+
+/*  addLeqLevel() {
+    this.map.addLayer(this.leqHeatmapLevel);
+    var vectorKey = this.updateLeq();
+    this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
+  }*/
+
+
+
+
+/*  @Input()
+  set leq(leqLevel) {
+    this.leqLevel = leqLevel;
+    console.log(this.leqLevel);
+    if (this.leqLevel) {
+      this.map.addLayer(this.leqHeatmapLevel);
+      var vectorKey = this.updateLeq();
+      this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
+    } else {
+      //this.map.removeLayer(this.leqHeatmapLevel);
+    }
+  }*/
   
   //Inizializzo il time travel
   initializeTimeTravel() {
@@ -106,73 +145,61 @@ export class MapComponent implements OnInit {
   addMapListener() {
     this.map.on('moveend', (evt) => {
       var map = evt.map;
-      var zoom = Math.trunc(this.map.getView().getZoom());
-      console.log("zoom: ",zoom);
       if (this.leqLevel) {
-        var vectorKey = this.updateLeq();
-        if(zoom != this.zoom) {
-          console.log("cambio sorgente",zoom);
-          this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
+        var leqSource = this.updateLeqSource();
+        if(leqSource != this.currentLeqSource) {
+          console.log("cambio livello");
+          this.leqHeatmapLevel.setSource(this.leqVectorMap[leqSource]);
+          this.currentLeqSource = leqSource;
         }
       }
     });
   }
 
-  updateLeq() {
-    var zoom = Math.trunc(this.map.getView().getZoom());
-    if (zoom%2 == 1) {
-      zoom += 1;
-    }
-    var vectorKey = zoom+"/"+formatDate(this.date, 1);
-    this.setSource(vectorKey);
-    return vectorKey;
+  addLeqLevel() {
+    this.map.addLayer(this.leqHeatmapLevel);
+    var leqSource = this.updateLeqSource();
+    this.leqHeatmapLevel.setSource(this.leqVectorMap[leqSource]);
   }
 
-  //Imposto la sorgente vettoriale alla Heatmap
-  setSource(vectorKey) {
-      var glbox = this.map.getView().calculateExtent(this.map.getSize());
-      var box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
-      var dim_tile = Math.ceil((box[2]-box[0])/4);
-      var start_tile = [box[0]-(box[0]%dim_tile), box[1]-(box[1]%dim_tile)];
+  removeLeqLevel() {
+    this.map.removeLayer(this.leqHeatmapLevel);
+    this.currentLeqSource = "";
+  }
 
-      //Creo un livello vettoriale per ogni ogni livello di zoom, se non esiste ne creo uno, così da non dover ricaricare le tiles già caricate
-      if (!(vectorKey in this.leqVectorMap)) {
-        this.leqVectorMap[vectorKey]= new VectorSource();
-        this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
-      }
+  updateLeqSource(): string {
+    var zoom = Math.trunc(this.map.getView().getZoom());
+    var vectorKey = level[zoom-3]+"/"+formatDate(this.date, 1);
 
-      console.log("Tiles caricate: ");
-      var tile = [start_tile[0], start_tile[1]];
-      while (tile[1] <= box[3]+dim_tile){
-        while (tile[0] <= box[2]+dim_tile){
-          //Inizio a scorrere le tile salvando quelle che ho già scaricato, così che prima di scaricarne una controllo se è già stata scaricata
-          var tileKey =tile[0]+"/"+tile[1]+"/"+(tile[0]+dim_tile)+"/"+(tile[1]+dim_tile)+"/"+vectorKey;
-          if (!(tileKey in this.storedTile)) {
-            console.log(tileKey);
-            this.storedTile[tileKey] = "1";
-            //Se la tile non è presente allora la scarico e ne aggiungo i punti alla sorgente vettoriale corrispondente
-            this.mongoRestService.getTile(tileKey).subscribe(geoJSON => {
-              this.leqVectorMap[vectorKey].addFeatures(geojsonFormat.readFeatures(geoJSON));
-            });
-          }
-          tile = [tile[0] + dim_tile, tile[1]];
+    var glbox = this.map.getView().calculateExtent(this.map.getSize());
+    var box = transformExtent(glbox,'EPSG:3857','EPSG:4326');
+
+    var dim_tile = tiles_size[zoom-3];
+    var start_tile = [box[0]-(box[0]%dim_tile), box[1]-(box[1]%dim_tile)];
+
+    if (!(vectorKey in this.leqVectorMap)) {
+      this.leqVectorMap[vectorKey]= new VectorSource();
+    }
+
+    console.log("Tiles caricate: ");
+    for (var i=start_tile[1]; i <= box[3]+dim_tile; i = Math.trunc((i += dim_tile)*10)/10){
+      for (var j=start_tile[0]; j <= box[2]+dim_tile; j = Math.trunc((j + dim_tile)*10)/10){
+        var tileKey =j+"/"+i+"/"+(j+dim_tile)+"/"+(i+dim_tile)+"/"+vectorKey;
+        if (!(tileKey in this.storedTile)) {
+          console.log(tileKey);
+          this.storedTile[tileKey] = "1";
+          //Se la tile non è presente allora la scarico e ne aggiungo i punti alla sorgente vettoriale corrispondente
+          this.mongoRestService.getTile(tileKey).subscribe(geoJSON => {
+            this.leqVectorMap[vectorKey].addFeatures(geojsonFormat.readFeatures(geoJSON));
+          });
         }
-        tile = [start_tile[0], tile[1] + dim_tile];
       }
+    }
+    return vectorKey;
   }
 
   showAirPollutionSettings() {
     this.airPollutionSettings = !this.airPollutionSettings;
-  }
-
-  showLeqLevel() {
-    if (this.leqLevel == false) {
-      this.map.addLayer(this.leqHeatmapLevel);
-      var vectorKey = this.updateLeq();
-      this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
-    } else {
-      this.map.removeLayer(this.leqHeatmapLevel);
-    }
   }
 
   setRadiusSize(event) {
@@ -190,44 +217,9 @@ export class MapComponent implements OnInit {
   changeDate() {
     this.date = stringToDate(this.days[this.selectedDay]);
     if (this.leqLevel) {
-      var vectorKey = this.updateLeq();
-      this.leqHeatmapLevel.setSource(this.leqVectorMap[vectorKey]);
+      var leqSource = this.updateLeqSource();
+      this.leqHeatmapLevel.setSource(this.leqVectorMap[leqSource]);
     }
   }
-}
 
-function formatDate(date, mode){
-  var dd = date.getDate();
-  var mm = date.getMonth()+1;
-  var yyyy = date.getFullYear();
-  if(dd<10) {dd='0'+dd}
-  if(mm<10) {mm='0'+mm}
-  switch (mode) {
-    case 1:
-      date = yyyy+'/'+mm+'/'+dd;
-      break;
-    case 2:
-      date = dd+'/'+mm
-      break;
-  }
-  return date
-}
-
-function last7Days () {
-  var result = [];
-  var i = 7;
-  while (i!=0) {
-    i--;
-    var d = new Date();
-    d.setDate(d.getDate() - i);
-    result.push( formatDate(d,2) )
-  }
-  return result;
-  //return(result.join(','));
-}
-
-function stringToDate(str) {
-  var split = str.split("/");
-  var date = new Date("2019-"+split[1]+"-"+split[0]);
-  return date;
 }
