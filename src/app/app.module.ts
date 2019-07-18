@@ -48,15 +48,13 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
 import { SpinnerComponent } from './spinner/spinner.component';
 import { SidenavComponent } from './sidenav/sidenav.component';
-import { NewLevelDialogComponent } from './components/new-level-dialog/new-level-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MapComponent,
     SpinnerComponent,
-    SidenavComponent,
-    NewLevelDialogComponent
+    SidenavComponent
   ],
   imports: [
 
@@ -106,7 +104,6 @@ import { NewLevelDialogComponent } from './components/new-level-dialog/new-level
     ReactiveFormsModule
   ],
   entryComponents: [
-    NewLevelDialogComponent
   ],
   providers: [
     { provide: HAMMER_GESTURE_CONFIG, useClass: GestureConfig },
