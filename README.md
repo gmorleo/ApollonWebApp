@@ -2,6 +2,15 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 6.0.8.
 
+In [package.json](/package.json) you can find all the dependencies version used.
+
+IDE: Webstorm 2019.1
+
+## Authors
+
+* Giuseppe Morleo - *Initial work*
+* Antonio Mariani -  *Contributors*
+ 
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.

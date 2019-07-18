@@ -105,3 +105,28 @@
   transform: translate3d(-80%, 0, 0);
 }
 
+.lgend-content{
+  width: 220px;
+  height: 35px;
+  position: absolute;
+  z-index: 100;
+  right: 5px;
+  top: 5px;
+  background-color: rgba(255,255,255,0.4);
+  border: 1px white dashed;
+  padding: 3px;
+}
+
+.legend{
+  width: 200px;
+  height: 20px;
+  background-image: linear-gradient(to right, #b5ff7d, #ff645a);
+  margin: auto;
+}
+
+.legend-detail{
+  display: flex;
+  width: 200px;
+  margin: 0 10px 0 10px;
+  color: #666;
+}

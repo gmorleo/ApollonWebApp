@@ -60,3 +60,8 @@
   display: inline-block;
   width: 80px;
 }
+
+.icon {
+  padding-right: 5px;
+  margin-left: -3px;
+}
