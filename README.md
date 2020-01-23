@@ -1,5 +1,7 @@
 # ApollonWebApp
 
+This project has been realized for the Database exam for the Computer Engineering course of the University of Salento.
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 6.0.8.
 
 In [package.json](/package.json) you can find all the dependencies version used.
